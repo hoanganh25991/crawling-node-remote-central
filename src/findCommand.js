@@ -252,9 +252,16 @@ const findCommand = async () => {
   // const linkList = await readDescription(page)(findXXX(fullUrl(first)))
   const linkList = ["/library/3-1/sonos/index.html", "/library/3-1/sony/index.html", "/library/3-1/t%252Ba/index.html"]
 
-  const s = await readDescription(page)(getCommand(fullUrl("/library/3-1/arcam/index.html")))
+  // const s = await readDescription(page)(getCommand(fullUrl("/library/3-1/arcam/index.html")))
 
-  // linkList.map(url => readDescription(page)(goInLink(fullUrl(url))))
+  const data = linkList.map(async url => {
+    const page = await browser.newPage()
+    return await readDescription(page)(getCommand(fullUrl(url)))
+  })
+
+  const xxx = await Promise.all(data)
+
+  console.log(xxx)
 
   // console.log(s)
   process.exit()
