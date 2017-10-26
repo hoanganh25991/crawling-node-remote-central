@@ -1,6 +1,6 @@
 const { logDebug } = require("./../log/index")
 const admin = require("firebase-admin")
-const serviceAccount = require("./../.credential/glass-turbine.json")
+const serviceAccount = require("./../.credential/firebase-service-account.json")
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://glass-turbine-148103.firebaseio.com/"

@@ -8,6 +8,7 @@ const viewport = { width: 1200, height: 600 }
 const screenshotDir = "screenshot"
 const jsonLogDir = "tmp"
 const { redo } = require("./utils")
+const { updateToFirebase } = require("./firebase")
 
 const NetworkManager = async page => {
   await page.setRequestInterceptionEnabled(true)
@@ -112,7 +113,7 @@ const runPageAction = (page, subLevel = 0) => lastReturn => async awaitAction =>
 const readDescription = page => async awaitListDescription => {
   const storeReturn = {}
   await queueAwaitList(awaitListDescription)(storeReturn)(runPageAction(page))
-  logWithInfo(["storeReturn", storeReturn])
+  // logWithInfo(["storeReturn", storeReturn])
   return storeReturn
 }
 
@@ -217,19 +218,26 @@ const getCommandDes = url => {
         const emptyCommandList = commandList.length === 0
 
         if (emptyCommandList) {
-          return window.location.pathname
+          return {
+            commands: commandList,
+            link: window.location.pathname
+          }
         }
 
         const hasNextPage = document.querySelector("div.forumnextlast.fright a")
         if (hasNextPage) {
-          return hasNextPage.getAttribute("href")
+          return {
+            commands: commandList,
+            link: hasNextPage.getAttribute("href")
+          }
         }
 
-        console.log(commandList)
-
-        return null
+        return {
+          commands: commandList,
+          link: null
+        }
       },
-      storeReturnAsKey: "link"
+      storeReturnAsKey: "commands"
     }
   ]
 }
@@ -315,11 +323,14 @@ const findCommand = async () => {
     const pagesRun = nextStep.map(async url => {
       const page = await browser.newPage()
       await NetworkManager(page)
-      return await readDescription(page)(getCommandDes(url))
+      const crawlingResult = await readDescription(page)(getCommandDes(url))
+      const flatCommands = crawlingResult["commands"]["commands"]
+      // Save
+      await updateToFirebase("nodeRemoteCentral")("commands")("title")(flatCommands)
+      return crawlingResult["commands"]["link"]
     })
-    const remainLinkObjs = await Promise.all(pagesRun)
-    const remainLinks = remainLinkObjs.map(obj => obj.link).filter(link => link)
-    return remainLinks
+    const remainLinks = await Promise.all(pagesRun)
+    return remainLinks.filter(link => link)
   }
 
   // const remainLinks = await run("http://files.remotecentral.com/library/3-1/t%252Ba/whole_system/index.html")

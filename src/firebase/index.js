@@ -1,2 +1,4 @@
 const updateToFirebase = require("./updateToFirebase")
-module.exports = updateToFirebase
+module.exports = {
+  updateToFirebase
+}
