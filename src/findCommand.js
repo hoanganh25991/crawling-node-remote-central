@@ -306,10 +306,17 @@ const findCommand = async () => {
   //
   // const s = await redo(loop(linkList))
 
+  let lastCount = 0
+  const count = count => {
+    lastCount += count
+    console.log("\x1b[36m%s\x1b[0m", lastCount)
+  }
+
   const run = async url => {
     const page = await browser.newPage()
     await NetworkManager(page)
     const { linkList: _links } = await readDescription(page)(getLinksDes(url))
+    await page.close()
     const links = _links.map(path => fullUrl(path))
 
     const noDeepLink = links.length === 0
@@ -317,7 +324,8 @@ const findCommand = async () => {
     let nextStep = [url]
 
     if (!noDeepLink) {
-      nextStep = links.slice(0, 2)
+      nextStep = links.slice(0, 3)
+      // nextStep = links
     }
 
     const pagesRun = nextStep.map(async url => {
@@ -325,8 +333,10 @@ const findCommand = async () => {
       await NetworkManager(page)
       const crawlingResult = await readDescription(page)(getCommandDes(url))
       const flatCommands = crawlingResult["commands"]["commands"]
+      count(flatCommands.length)
       // Save
       await updateToFirebase("nodeRemoteCentral")("commands")("title")(flatCommands)
+      await page.close()
       return crawlingResult["commands"]["link"]
     })
     const remainLinks = await Promise.all(pagesRun)
@@ -343,7 +353,7 @@ const findCommand = async () => {
     const list = redoCount === 0 ? [url] : lastResult
     console.log("I see list as", list)
 
-    const shouldBreak = list.length === 0
+    const shouldBreak = list.length === 0 || redoCount > 10
 
     if (shouldBreak) {
       finish()
@@ -354,6 +364,8 @@ const findCommand = async () => {
   }
 
   await redo(loop("/library/3-1/index.html"))
+
+  await browser.close()
 
   // console.log(s)
   process.exit()
