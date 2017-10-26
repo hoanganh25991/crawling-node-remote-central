@@ -1,10 +1,13 @@
 const { logDebug } = require("./../log/index")
 const admin = require("firebase-admin")
 const serviceAccount = require("./../.credential/firebase-service-account.json")
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-})
-const db = admin.firestore()
+const thisApp = admin.initializeApp(
+  {
+    credential: admin.credential.cert(serviceAccount)
+  },
+  "firestore"
+)
+const db = thisApp.firestore()
 
 const updateObjX = mainBranch => objXBranch => objXIndexKey => async objX => {
   const lx = logDebug.indent(1)
@@ -69,15 +72,15 @@ const updateManyObjXs = mainBranch => objXBranch => objXIndexKey => objXs => {
   // db.collection("tinyPOS").doc("title").set({title: "tinyPOS"})
   // await db.collection("xxx").doc().set({})
   // const objectXRef = db.collection("xxx").doc("nodeRemoteCentral").collection("categories").where("title", "==", "xxx").get().then(snap => snap.forEach(d => console.log(d.id)))
-  await db
-    .collection("xxx")
-    .doc("apple")
-    .set({ title: "Apple", count: 7 })
-  await db
-    .collection("xxx")
-    .doc("apple")
-    .collections("subcategories")
-    .doc()
+  // await db
+  //   .collection("xxx")
+  //   .doc("apple")
+  //   .set({ title: "Apple", count: 7 })
+  // await db
+  //   .collection("xxx")
+  //   .doc("apple")
+  //   .collections("subcategories")
+  //   .doc()
 })()
 
 module.exports = updateManyObjXs

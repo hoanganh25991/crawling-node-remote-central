@@ -1,11 +1,14 @@
 const { logDebug } = require("./../log/index")
 const admin = require("firebase-admin")
 const serviceAccount = require("./../.credential/firebase-service-account.json")
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://glass-turbine-148103.firebaseio.com/"
-})
-const db = admin.database()
+const thisApp = admin.initializeApp(
+  {
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: "https://glass-turbine-148103.firebaseio.com/"
+  },
+  "firebase"
+)
+const db = thisApp.database()
 
 const updateObjX = mainBranch => objXBranch => objXIndexKey => async objX => {
   const lx = logDebug.indent(1)
