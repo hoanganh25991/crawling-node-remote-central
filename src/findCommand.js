@@ -11,6 +11,9 @@ const jsonLogDir = "tmp"
 const NetworkManager = async page => {
   await page.setRequestInterceptionEnabled(true)
   const requestList = []
+  page.on("console", msg => {
+    console.log(msg)
+  })
   page.on("request", interceptedRequest => {
     requestList.push(interceptedRequest)
     const staticAssets =
@@ -185,7 +188,7 @@ const findXXX = url => {
   ]
 }
 
-const goInLink = url => {
+const getCommand = url => {
   return [
     {
       title: `Go to url: ${url}`,
@@ -194,8 +197,7 @@ const goInLink = url => {
     {
       title: `Find command`,
       evaluate: async () => {
-        const divSelector =
-          "#maintable > tbody > tr:nth-child(3) > td.rightsidetable > table:nth-child(2) > tbody > tr > td > table.filelistboxout > tbody > tr > td  div.filelistnormal"
+        const divSelector = "td  div.filelistnormal"
         const nodes = document.querySelectorAll(divSelector)
         const list = Array.apply(null, nodes)
         const commandList = list.map(node => {
@@ -203,7 +205,7 @@ const goInLink = url => {
           const _title = node.querySelector("div.filelisttitle").innerText
           const title = `${subtitle} ${_title}`
           const command = node.querySelector("div.filehexcodes").innerText
-          const notes = node.querySelector("table > tbody > tr > td:nth-child(1)")
+          const notes = node.querySelector("table > tbody > tr > td:nth-child(1)").innerText
           return {
             title,
             command,
@@ -214,11 +216,12 @@ const goInLink = url => {
         const emptyCommandList = commandList.length === 0
 
         if (emptyCommandList) {
-          return url
+          return window.location.href
         }
-        console.log(commandList)
+
         return null
-      }
+      },
+      storeReturnAsKey: "commands"
     }
   ]
 }
@@ -246,17 +249,16 @@ const findCommand = async () => {
 
   console.log(fullUrl(first))
 
-  const linkList = await readDescription(page)(findXXX(fullUrl(first)))
-  // const linkList = [
-  //   '/library/3-1/sonos/index.html',
-  //   '/library/3-1/sony/index.html',
-  //   '/library/3-1/t%252Ba/index.html',
-  // ]
+  // const linkList = await readDescription(page)(findXXX(fullUrl(first)))
+  const linkList = ["/library/3-1/sonos/index.html", "/library/3-1/sony/index.html", "/library/3-1/t%252Ba/index.html"]
+
+  const s = await readDescription(page)(getCommand(fullUrl("/library/3-1/arcam/index.html")))
+
+  // linkList.map(url => readDescription(page)(goInLink(fullUrl(url))))
 
   // console.log(s)
   process.exit()
 }
-
 ;(async () => {
   await findCommand()
 })()
