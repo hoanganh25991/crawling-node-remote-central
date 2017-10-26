@@ -1,8 +1,7 @@
-const defer = require("./defer")
-const logWithInfo = require("./logInfo")
+const logWithInfo = require("./logWithInfo")
 const puppeteer = require("puppeteer")
 const { puppeteer: config } = require("./config")
-const logExactErrMsg = require("./logErr")
+const logExactErrMsg = require("./logExactErrMsg")
 const { screenshot } = require("./pageUtils")
 const homepage = "https://www.foody.vn/ho-chi-minh#/places"
 const viewport = { width: 1200, height: 600 }
@@ -14,11 +13,14 @@ const NetworkManager = async page => {
   const requestList = []
   page.on("request", interceptedRequest => {
     requestList.push(interceptedRequest)
-    const staticAssets = interceptedRequest.url.endsWith(".jpg") || interceptedRequest.url.endsWith(".png") || interceptedRequest.url.endsWith(".gif")
+    const staticAssets =
+      interceptedRequest.url.endsWith(".jpg") ||
+      interceptedRequest.url.endsWith(".png") ||
+      interceptedRequest.url.endsWith(".gif")
     if (staticAssets) interceptedRequest.abort()
     else interceptedRequest.continue()
   })
-  // page.on("console", msg => console.log(msg))
+
   return {
     log() {
       logWithInfo(`[NetworkManager] Summary: ${requestList.length} requets`)
@@ -80,12 +82,9 @@ const runPageAction = (page, subLevel = 0) => lastReturn => async awaitAction =>
   let result
   try {
     result = await page[actionName](...args)
-    // Always defer 0.5s to wait for execution
   } catch (err) {
     logExactErrMsg(err)
   }
-
-  await defer(0.5)
 
   // Should take screenshot
   const { screenshot } = awaitAction
@@ -103,179 +102,126 @@ const runPageAction = (page, subLevel = 0) => lastReturn => async awaitAction =>
   }
 
   // Merge return
-  const nextReturn = Object.assign(lastReturn, actionReturn)
-  return nextReturn
+  return Object.assign(lastReturn, actionReturn)
 }
 
 const readDescription = page => async awaitListDescription => {
   const storeReturn = {}
   await queueAwaitList(awaitListDescription)(storeReturn)(runPageAction(page))
   logWithInfo(["storeReturn", storeReturn])
-  // const fs = require("fs")
-  // const time = new Date().getTime()
-  // fs.writeFileSync(`${time}.json`, JSON.stringify(storeReturn))
   return storeReturn
 }
 
-const loginDescription = [
-  {
-    title: `Dismiss popup`,
-    actions: [
-      {
-        title: `Click to 'Khám phá' to hide popup`,
-        click: `#popup-choose-category > ul > li:nth-child(1) > a`
-      },
-      {
-        title: `Wait for popup disappear`,
-        waitForFunction: `document.querySelector("#popup-choose-category > ul > li:nth-child(1) > a").offsetParent === null`
-      }
-    ]
-  },
-  {
-    title: `Login`,
-    actions: [
-      {
-        title: `Click 'Đăng nhập'`,
-        click: `#accountmanager > a`
-      },
-      {
-        title: `Wait for see 'Đăng nhập' button on popup`,
-        waitForSelector: `#fdDlgLogin > div.frame > div.btns.col2.bottom > a.btn.btn-login`
-      },
-      {
-        title: `Click 'Đăng nhập' on popup`,
-        click: `#fdDlgLogin > div.frame > div.btns.col2.bottom > a.btn.btn-login`
-      },
-      {
-        title: `Wait for login page loaded`,
-        waitForFunction: `window.location.href.startsWith("https://id.foody.vn")`
-      },
-      {
-        title: `Type in email`,
-        actions: [
-          {
-            title: `Focus on email input`,
-            focus: `#Email`
-          },
-          {
-            title: `Type email: hoanganh_25991@yahoo.com.vn`,
-            type: `hoanganh_25991@yahoo.com.vn`
-          }
-        ]
-      },
-      {
-        title: `Type in password`,
-        actions: [
-          {
-            title: `Focus on password input`,
-            focus: `#Password`
-          },
-          {
-            title: `Type password: wckmaemi`,
-            type: `wckmaemi`
-          }
-        ]
-      },
-      {
-        title: `Click Đăng nhập, to submit`,
-        click: `#bt_submit`
-      },
-      {
-        title: `Wait for go back to homepage`,
-        waitForFunction: [`window.location.href.startsWith("https://www.foody.vn")`, { timeout: 60 * 1000 }]
-      },
-      {
-        title: `Current location`,
-        evaluate: () => window.location.href,
-        storeReturnAsKey: "currentLocation"
-      }
-    ]
-  },
-  {
-    title: `Inject getIdFromSelector for page`,
-    exposeFunction: [
-      "getIdFromSelector",
-      selector => {
-        const idStrs = selector.match(/\d+/gi)
-        if (!idStrs) throw new Error(`Cant find id from selector: ${selector}`)
-        //Get the first one only
-        return Number(idStrs[0])
-      }
-    ]
-  },
-  {
-    title: `Store available location`,
-    actions: [
-      {
-        title: `Open filter 'Bộ lọc'`,
-        click: `#searchFormTop > div > a`
-      },
-      {
-        title: `Wait for filter 'Bộ lọc' load locations 'Khu vực'`,
-        waitForSelector: ["#fdDlgSearchFilter > div.sf-right", { timeout: 60 * 1000 }]
-      },
-      {
-        title: `Evaluate`,
-        evaluate: async () => {
-          const inputNodeList = document.querySelectorAll(
-            "#fdDlgSearchFilter > div.sf-right > div:nth-child(2) > ul > li > input"
-          )
-          const inputList = []
-          for (let i = 0; i < inputNodeList.length; i++) {
-            inputList.push(inputNodeList[i])
-          }
-          const availableLocations = await inputList.reduce(async (carry, inputElement) => {
-            const lastCarry = await carry
-            const selector = `#${inputElement.id}`
-            const labelElement = inputElement.nextElementSibling
-            const displayName = labelElement.innerText
-            //noinspection JSUnresolvedFunction
-            const id = await window.getIdFromSelector(selector)
-            return [...lastCarry, { selector, displayName, id }]
-          }, [])
-          return availableLocations
+// {
+//   title: `Inject getIdFromSelector for page`,
+//   exposeFunction: [
+//     "getIdFromSelector",
+//     selector => {
+//       const idStrs = selector.match(/\d+/gi)
+//       if (!idStrs) throw new Error(`Cant find id from selector: ${selector}`)
+//       //Get the first one only
+//       return Number(idStrs[0])
+//     }
+//   ]
+// },
+
+// {
+//   title: `Store available categories`,
+//   actions: [
+//     {
+//       title: `Open filter 'Bộ lọc' for categories 'Phân loại'`,
+//       click: `#fdDlgSearchFilter > div.sf-left > ul > li:nth-child(3)`
+//     },
+//     {
+//       title: `Wait for filter 'Bộ lọc' load categories 'Phân loại'`,
+//       waitForFunction: `setTimeout(()=>{document.querySelector("#fdDlgSearchFilter > div.sf-left > ul > li:nth-child(3)").getAttribute("class")==="active"}, 500)`
+//     },
+//     {
+//       title: `Evaluate`,
+//       evaluate: async () => {
+//         const inputNodeList = document.querySelectorAll(
+//           "#fdDlgSearchFilter > div.sf-right > div:nth-child(1) > ul > li > input"
+//         )
+//         const inputList = []
+//         for (let i = 0; i < inputNodeList.length; i++) {
+//           inputList.push(inputNodeList[i])
+//         }
+//         const availableCategories = await inputList.reduce(async (carry, inputElement) => {
+//           const lastCarry = await carry
+//           const selector = `#${inputElement.id}`
+//           const labelElement = inputElement.nextElementSibling
+//           const displayName = labelElement.innerText
+//           //noinspection JSUnresolvedFunction
+//           const id = await window.getIdFromSelector(selector)
+//           return [...lastCarry, { selector, displayName, id }]
+//         }, [])
+//         return availableCategories
+//       },
+//       storeReturnAsKey: "availableCategories"
+//     }
+//   ]
+// }
+
+const findXXX = url => {
+  return [
+    {
+      title: `Start`,
+      actions: [
+        {
+          title: "Go to page",
+          goto: url
         },
-        storeReturnAsKey: "availableLocations"
-      }
-    ]
-  },
-  {
-    title: `Store available categories`,
-    actions: [
-      {
-        title: `Open filter 'Bộ lọc' for categories 'Phân loại'`,
-        click: `#fdDlgSearchFilter > div.sf-left > ul > li:nth-child(3)`
-      },
-      {
-        title: `Wait for filter 'Bộ lọc' load categories 'Phân loại'`,
-        waitForFunction: `setTimeout(()=>{document.querySelector("#fdDlgSearchFilter > div.sf-left > ul > li:nth-child(3)").getAttribute("class")==="active"}, 500)`
-      },
-      {
-        title: `Evaluate`,
-        evaluate: async () => {
-          const inputNodeList = document.querySelectorAll(
-            "#fdDlgSearchFilter > div.sf-right > div:nth-child(1) > ul > li > input"
-          )
-          const inputList = []
-          for (let i = 0; i < inputNodeList.length; i++) {
-            inputList.push(inputNodeList[i])
+        {
+          title: `Count list`,
+          evaluate: async () => {
+            const groupNodeList = document.querySelectorAll("td div.filelistdevice a")
+            const groupList = Array.apply(null, groupNodeList)
+            return groupList.map(aNode => aNode.getAttribute("href"))
+          },
+          storeReturnAsKey: "linkList"
+        }
+      ]
+    }
+  ]
+}
+
+const goInLink = url => {
+  return [
+    {
+      title: `Go to url: ${url}`,
+      goto: url
+    },
+    {
+      title: `Find command`,
+      evaluate: async () => {
+        const divSelector =
+          "#maintable > tbody > tr:nth-child(3) > td.rightsidetable > table:nth-child(2) > tbody > tr > td > table.filelistboxout > tbody > tr > td  div.filelistnormal"
+        const nodes = document.querySelectorAll(divSelector)
+        const list = Array.apply(null, nodes)
+        const commandList = list.map(node => {
+          const subtitle = node.querySelector("div.filelistsubtitle").innerText
+          const _title = node.querySelector("div.filelisttitle").innerText
+          const title = `${subtitle} ${_title}`
+          const command = node.querySelector("div.filehexcodes").innerText
+          const notes = node.querySelector("table > tbody > tr > td:nth-child(1)")
+          return {
+            title,
+            command,
+            notes
           }
-          const availableCategories = await inputList.reduce(async (carry, inputElement) => {
-            const lastCarry = await carry
-            const selector = `#${inputElement.id}`
-            const labelElement = inputElement.nextElementSibling
-            const displayName = labelElement.innerText
-            //noinspection JSUnresolvedFunction
-            const id = await window.getIdFromSelector(selector)
-            return [...lastCarry, { selector, displayName, id }]
-          }, [])
-          return availableCategories
-        },
-        storeReturnAsKey: "availableCategories"
+        })
+
+        const emptyCommandList = commandList.length === 0
+
+        if (emptyCommandList) {
+          return url
+        }
+        console.log(commandList)
+        return null
       }
-    ]
-  }
-]
+    }
+  ]
+}
 
 const joinTwoList = list1 => list2 => {
   return list1.reduce((carry, item) => {
@@ -289,8 +235,30 @@ const storeData = fileName => data => {
   fs.writeFileSync(`${jsonLogDir}/${fileName}`, JSON.stringify(data))
 }
 
-const findFilterApiUrl = async () => {
-  return []
+const findCommand = async () => {
+  const browser = await puppeteer.launch(config.launch)
+  const page = await browser.newPage()
+  await NetworkManager(page)
+
+  const fullUrl = sub => `http://files.remotecentral.com${sub}`
+
+  const first = "/library/3-1/index.html"
+
+  console.log(fullUrl(first))
+
+  const linkList = await readDescription(page)(findXXX(fullUrl(first)))
+  // const linkList = [
+  //   '/library/3-1/sonos/index.html',
+  //   '/library/3-1/sony/index.html',
+  //   '/library/3-1/t%252Ba/index.html',
+  // ]
+
+  // console.log(s)
+  process.exit()
 }
 
-module.exports = findFilterApiUrl
+;(async () => {
+  await findCommand()
+})()
+
+module.exports = findCommand

@@ -11,7 +11,7 @@
     "single-line-log": "^1.1.2"
   },
   "devDependencies": {
-    "husky": "^0.13.4",
+    "husky": "^0.14.3",
     "lint-staged": "^4.0.0",
     "pipe-to-browser": "^1.0.4",
     "prettier": "^1.4.4"
