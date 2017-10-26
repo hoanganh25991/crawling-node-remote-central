@@ -8,7 +8,7 @@ const viewport = { width: 1200, height: 600 }
 const screenshotDir = "screenshot"
 const jsonLogDir = "tmp"
 const { redo } = require("./utils")
-const { updateToFirebase } = require("./firebase")
+const updateToFirestore = require("./firebase/updateToFirestore")
 
 const NetworkManager = async page => {
   await page.setRequestInterceptionEnabled(true)
@@ -335,7 +335,7 @@ const findCommand = async () => {
       const flatCommands = crawlingResult["commands"]["commands"]
       count(flatCommands.length)
       // Save
-      await updateToFirebase("nodeRemoteCentral")("commands")("title")(flatCommands)
+      await updateToFirestore("nodeRemoteCentral")("commands")("title")(flatCommands)
       await page.close()
       return crawlingResult["commands"]["link"]
     })
