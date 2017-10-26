@@ -335,8 +335,25 @@ const findCommand = async () => {
 
   // const remainLinks = await run("http://files.remotecentral.com/library/3-1/t%252Ba/whole_system/index.html")
   // const remainLinks = await run("http://files.remotecentral.com/library/3-1/apple/index.html")
-  const remainLinks = await run("http://files.remotecentral.com/library/3-1/index.html")
-  console.log(remainLinks)
+  // const remainLinks = await run("http://files.remotecentral.com/library/3-1/index.html")
+  // console.log(remainLinks)
+
+  const loop = async (redoCount, lastResult, finish) => {
+    console.log("redocount", redoCount)
+    const list = redoCount === 0 ? ["/library/3-1/index.html"] : lastResult
+    console.log("I see list as", list)
+
+    const shouldBreak = list.length === 0
+
+    if (shouldBreak) {
+      finish()
+    }
+
+    const remainLinksListNotFlat = await Promise.all(list.map(async pathUrl => await run(fullUrl(pathUrl))))
+    return remainLinksListNotFlat.reduce((c, list) => [...c, ...list], [])
+  }
+
+  await redo(loop)
 
   // console.log(s)
   process.exit()
