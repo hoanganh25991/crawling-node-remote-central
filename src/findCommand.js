@@ -324,7 +324,7 @@ const findCommand = async () => {
     let nextStep = [url]
 
     if (!noDeepLink) {
-      nextStep = links.slice(0, 3)
+      nextStep = links.slice(0, 10)
       // nextStep = links
     }
 
@@ -350,7 +350,9 @@ const findCommand = async () => {
 
   const loop = url => async (redoCount, lastResult, finish) => {
     console.log("redocount", redoCount)
-    const list = redoCount === 0 ? [url] : lastResult
+    const isArr = Array.isArray(url)
+    const passInUrl = isArr ? url : [url]
+    const list = redoCount === 0 ? passInUrl : lastResult
     console.log("I see list as", list)
 
     const shouldBreak = list.length === 0 || redoCount > 10
