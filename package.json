@@ -1,0 +1,29 @@
+{
+  "dependencies": {
+    "chromeless": "^1.2.0",
+    "crypto": "^1.0.1",
+    "es6-promise": "^4.1.1",
+    "firebase-admin": "^5.2.1",
+    "isomorphic-fetch": "^2.2.1",
+    "minimist": "^1.2.0",
+    "onesignal": "^0.1.2",
+    "puppeteer": "~0.11.0",
+    "single-line-log": "^1.1.2"
+  },
+  "devDependencies": {
+    "husky": "^0.13.4",
+    "lint-staged": "^4.0.0",
+    "pipe-to-browser": "^1.0.4",
+    "prettier": "^1.4.4"
+  },
+  "scripts": {
+    "precommit": "lint-staged",
+    "start": "node index.js 2>&1 | pipe-to-browser"
+  },
+  "lint-staged": {
+    "*.js": [
+      "prettier --write --no-semi --print-width 120",
+      "git add"
+    ]
+  }
+}

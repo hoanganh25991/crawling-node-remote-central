@@ -1,0 +1,7 @@
+.idea
+node_modules
+vendor
+tmp
+*.png
+*.jpeg
+*.jpg

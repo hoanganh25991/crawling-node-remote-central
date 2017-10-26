@@ -1,0 +1,7 @@
+{
+  "mainBranch":"nodeFoodyStores",
+  "storeIndexKey":"id",
+  "storesBranch":"stores",
+  "locationsBranch":"locations",
+  "categoriesBranch":"categories"
+}
