@@ -7,6 +7,7 @@ const homepage = "https://www.foody.vn/ho-chi-minh#/places"
 const viewport = { width: 1200, height: 600 }
 const screenshotDir = "screenshot"
 const jsonLogDir = "tmp"
+const { redo } = require("./utils")
 
 const NetworkManager = async page => {
   await page.setRequestInterceptionEnabled(true)
@@ -219,9 +220,14 @@ const getCommand = url => {
           return window.location.href
         }
 
+        const hasNextPage = document.querySelector("div.forumnextlast.fright a")
+        if (hasNextPage) {
+          return hasNextPage.getAttribute("href")
+        }
+
         return null
       },
-      storeReturnAsKey: "commands"
+      storeReturnAsKey: "link"
     }
   ]
 }
@@ -250,18 +256,45 @@ const findCommand = async () => {
   console.log(fullUrl(first))
 
   // const linkList = await readDescription(page)(findXXX(fullUrl(first)))
-  const linkList = ["/library/3-1/sonos/index.html", "/library/3-1/sony/index.html", "/library/3-1/t%252Ba/index.html"]
+  // const linkList = ["/library/3-1/sonos/index.html", "/library/3-1/sony/index.html", "/library/3-1/t%252Ba/index.html"]
 
   // const s = await readDescription(page)(getCommand(fullUrl("/library/3-1/arcam/index.html")))
 
-  const data = linkList.map(async url => {
-    const page = await browser.newPage()
-    return await readDescription(page)(getCommand(fullUrl(url)))
-  })
+  // const data = linkList.map(async url => {
+  //   const page = await browser.newPage()
+  //   return await readDescription(page)(getCommand(fullUrl(url)))
+  // })
+  //
+  // const xxx = await Promise.all(data)
+  //
+  // console.log(xxx)
 
-  const xxx = await Promise.all(data)
+  const linkList = ["/library/3-1/t%252Ba/index.html"]
 
-  console.log(xxx)
+  const loop = kickLinkList => async (redoCount, lastResult, finish) => {
+    logWithInfo(`Running... Redo count: ${redoCount}`)
+
+    // First run, using kickLinkList
+    const linkList = redoCount === 0 ? kickLinkList : lastResult
+
+    const pageRun = linkList.map(async url => {
+      const page = await browser.newPage()
+      return await readDescription(page)(getCommand(fullUrl(url)))
+    })
+
+    const waitForAllPageFinished = Promise.all(pageRun)
+    const _newLinkList = await waitForAllPageFinished
+    // Filter null link
+    const newLinkList = _newLinkList.map(obj => obj.link).filter(link => link)
+    const shouldEndLoop = newLinkList.length === 0
+    if (shouldEndLoop) finish()
+
+    logWithInfo(`New link list: ${JSON.stringify(newLinkList, null, 2)}`)
+
+    return newLinkList
+  }
+
+  const s = await redo(loop(linkList))
 
   // console.log(s)
   process.exit()
