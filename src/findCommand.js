@@ -338,9 +338,9 @@ const findCommand = async () => {
   // const remainLinks = await run("http://files.remotecentral.com/library/3-1/index.html")
   // console.log(remainLinks)
 
-  const loop = async (redoCount, lastResult, finish) => {
+  const loop = url => async (redoCount, lastResult, finish) => {
     console.log("redocount", redoCount)
-    const list = redoCount === 0 ? ["/library/3-1/index.html"] : lastResult
+    const list = redoCount === 0 ? [url] : lastResult
     console.log("I see list as", list)
 
     const shouldBreak = list.length === 0
@@ -353,7 +353,7 @@ const findCommand = async () => {
     return remainLinksListNotFlat.reduce((c, list) => [...c, ...list], [])
   }
 
-  await redo(loop)
+  await redo(loop("/library/3-1/index.html"))
 
   // console.log(s)
   process.exit()
