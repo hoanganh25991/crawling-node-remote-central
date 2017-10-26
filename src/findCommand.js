@@ -166,13 +166,13 @@ const readDescription = page => async awaitListDescription => {
 //   ]
 // }
 
-const findXXX = url => {
+const getLinksDes = url => {
   return [
     {
       title: `Start`,
       actions: [
         {
-          title: "Go to page",
+          title: `Go to url: ${url}`,
           goto: url
         },
         {
@@ -189,7 +189,7 @@ const findXXX = url => {
   ]
 }
 
-const getCommand = url => {
+const getCommandDes = url => {
   return [
     {
       title: `Go to url: ${url}`,
@@ -217,13 +217,15 @@ const getCommand = url => {
         const emptyCommandList = commandList.length === 0
 
         if (emptyCommandList) {
-          return window.location.href
+          return window.location.pathname
         }
 
         const hasNextPage = document.querySelector("div.forumnextlast.fright a")
         if (hasNextPage) {
           return hasNextPage.getAttribute("href")
         }
+
+        console.log(commandList)
 
         return null
       },
@@ -271,30 +273,59 @@ const findCommand = async () => {
 
   const linkList = ["/library/3-1/t%252Ba/index.html"]
 
-  const loop = kickLinkList => async (redoCount, lastResult, finish) => {
-    logWithInfo(`Running... Redo count: ${redoCount}`)
+  // const loop = kickLinkList => async (redoCount, lastResult, finish) => {
+  //   logWithInfo(`Running... Redo count: ${redoCount}`)
+  //
+  //   // First run, using kickLinkList
+  //   const linkList = redoCount === 0 ? kickLinkList : lastResult
+  //
+  //   const pageRun = linkList.map(async url => {
+  //     const page = await browser.newPage()
+  //     return await readDescription(page)(getCommand(fullUrl(url)))
+  //   })
+  //
+  //   const waitForAllPageFinished = Promise.all(pageRun)
+  //   const _newLinkList = await waitForAllPageFinished
+  //   // Filter null link
+  //   const newLinkList = _newLinkList.map(obj => obj.link).filter(link => link)
+  //   const shouldEndLoop = newLinkList.length === 0
+  //   if (shouldEndLoop) finish()
+  //
+  //   logWithInfo(`New link list: ${JSON.stringify(newLinkList, null, 2)}`)
+  //
+  //   return newLinkList
+  // }
+  //
+  // const s = await redo(loop(linkList))
 
-    // First run, using kickLinkList
-    const linkList = redoCount === 0 ? kickLinkList : lastResult
+  const run = async url => {
+    const page = await browser.newPage()
+    await NetworkManager(page)
+    const { linkList: _links } = await readDescription(page)(getLinksDes(url))
+    const links = _links.map(path => fullUrl(path))
 
-    const pageRun = linkList.map(async url => {
+    const noDeepLink = links.length === 0
+
+    let nextStep = [url]
+
+    if (!noDeepLink) {
+      nextStep = links.slice(0, 2)
+    }
+
+    const pagesRun = nextStep.map(async url => {
       const page = await browser.newPage()
-      return await readDescription(page)(getCommand(fullUrl(url)))
+      await NetworkManager(page)
+      return await readDescription(page)(getCommandDes(url))
     })
-
-    const waitForAllPageFinished = Promise.all(pageRun)
-    const _newLinkList = await waitForAllPageFinished
-    // Filter null link
-    const newLinkList = _newLinkList.map(obj => obj.link).filter(link => link)
-    const shouldEndLoop = newLinkList.length === 0
-    if (shouldEndLoop) finish()
-
-    logWithInfo(`New link list: ${JSON.stringify(newLinkList, null, 2)}`)
-
-    return newLinkList
+    const remainLinkObjs = await Promise.all(pagesRun)
+    const remainLinks = remainLinkObjs.map(obj => obj.link).filter(link => link)
+    return remainLinks
   }
 
-  const s = await redo(loop(linkList))
+  // const remainLinks = await run("http://files.remotecentral.com/library/3-1/t%252Ba/whole_system/index.html")
+  // const remainLinks = await run("http://files.remotecentral.com/library/3-1/apple/index.html")
+  const remainLinks = await run("http://files.remotecentral.com/library/3-1/index.html")
+  console.log(remainLinks)
 
   // console.log(s)
   process.exit()
