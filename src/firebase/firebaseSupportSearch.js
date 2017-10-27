@@ -14,25 +14,14 @@ const index = algolia.initIndex("commands")
 
 index.setSettings(
   {
-    searchableAttributes: [
-      "title"
-      // 'firstname',
-      // 'company',
-      // 'email',
-      // 'city',
-      // 'address'
-    ]
+    searchableAttributes: ["title"]
   },
   function(err, content) {
-    console.log("Set index settings, allow search on title")
     console.log(content)
-
-    console.log("Should run process exit. Stop by async/await")
-    // process.exit(0);
   }
 )
 
-const initialImport = async dataSnapshot => {
+const initialImport = (resolve, reject) => dataSnapshot => {
   // Array of data to index
   const objectsToIndex = []
   // Get all objects
@@ -48,18 +37,17 @@ const initialImport = async dataSnapshot => {
     objectsToIndex.push(childData)
   })
   // Add or update new objects
-  await index.saveObjects(objectsToIndex, async (err, content) => {
-    if (err) {
-      throw err
-    }
-
-    console.log("Firebase -> Algolia import done")
+  index.saveObjects(objectsToIndex, function(err, content) {
+    if (err) reject(err)
+    resolve(console.log("Firebase -> Algolia import done", content))
   })
 }
 
 const run = async () => {
   const commandsRef = db.ref("nodeRemoteCentral/commands")
-  await commandsRef.once("value", initialImport)
+  await new Promise((resolve, reject) => {
+    commandsRef.once("value", initialImport(resolve, reject))
+  })
 }
 
 module.exports = run

@@ -120,7 +120,7 @@ const readDescription = page => async awaitListDescription => {
   return storeReturn
 }
 
-const getLinksDes = url => {
+const getLinksDes = (url, level) => {
   return [
     {
       title: `Start`,
@@ -130,29 +130,37 @@ const getLinksDes = url => {
           goto: url
         },
         {
+          title: `Expose level`,
+          exposeFunction: ["level", () => level]
+        },
+        {
           title: `Count list`,
           evaluate: async () => {
+            const currLevel = await window.level()
+            console.log(currLevel)
+
             const groupNodeList = document.querySelectorAll("td div.filelistdevice")
 
             const groupList = Array.apply(null, groupNodeList)
 
-            const findCate = aNode => {
+            const findCate = aNode => _level => {
               const url = `${window.location.origin}${aNode.querySelector("a").getAttribute("href")}`
               const title = aNode.querySelector("a").innerText
               const count = +aNode.querySelector("span.smalltextc").innerText.match(/\d+/)[0]
-              return { url, title, count }
+              return { url, title, count, level: _level }
             }
 
             return groupList.map(aNode => {
-              const cate = findCate(aNode)
+              const cate = findCate(aNode)(currLevel)
               let sub = []
               let shouldRun = true
               let a = aNode
+              const nextLevel = currLevel + 1
               do {
                 a = a.nextElementSibling
                 shouldRun = Boolean(a && a.getAttribute("class") && a.getAttribute("class").includes("bulletlarge"))
                 if (shouldRun) {
-                  const cate = findCate(a)
+                  const cate = findCate(a)(nextLevel)
                   sub.push(cate)
                 }
               } while (shouldRun)
@@ -337,12 +345,15 @@ const kiemLinkLuuInterface = async () => {
   const page = await browser.newPage()
   await NetworkManager(page)
   const url = "http://files.remotecentral.com/library/3-1/index.html"
-  const crawlingResult = await readDescription(page)(getLinksDes(url))
+  const level = 0
+  const crawlingResult = await readDescription(page)(getLinksDes(url, level))
   let { categories } = crawlingResult
 
   categories = categories.slice(0, 4)
 
   const chunks = chunk(categories, 5)
+
+  const nextLevel = level + 1
 
   await chunks.reduce(async (carry, chunk) => {
     await carry
@@ -350,7 +361,7 @@ const kiemLinkLuuInterface = async () => {
       chunk.map(async cate => {
         const page = await browser.newPage()
         await NetworkManager(page)
-        const crawlingResult = await readDescription(page)(getLinksDes(cate.url))
+        const crawlingResult = await readDescription(page)(getLinksDes(cate.url, nextLevel))
         await page.close()
         const { categories: subCates } = crawlingResult
         console.log("\x1b[36m%s\x1b[0m", `FIND ${subCates.length} SUBCATE OF CATE: ${cate.title}`)
@@ -420,9 +431,9 @@ const kiemCommandsLuuThemPath = async categories => {
       chunk.map(async commandPath => {
         const lastPath = commandPath[commandPath.length - 1]
         const url = lastPath.url
-        console.log("See url", url)
+        // console.log("See url", url)
         const commands = await finxCommands(browser, url)
-        console.log("Finish find command:", commands)
+        // console.log("Finish find command:", commands)
         const flatPath = commandPath.reduce((carry, cate, index) => Object.assign(carry, { [cate.title]: index }), {})
         const commandWithPaths = commands.map(command => Object.assign({}, command, { path: flatPath }))
         console.log("Save commands to firebase. SAMPLE ONE: ", commandWithPaths[0])
@@ -431,9 +442,12 @@ const kiemCommandsLuuThemPath = async categories => {
     )
   }, console.log("\x1b[36m%s\x1b[0m", `Total chunks: ${chunks.length}`))
 }
+
+// const buildSearch = require("./firebase/firebaseSupportSearch")
 ;(async () => {
   const categories = await kiemLinkLuuInterface()
-  await kiemCommandsLuuThemPath(categories)
+  // await kiemCommandsLuuThemPath(categories)
+  // await buildSearch()
   process.exit()
 })()
 
