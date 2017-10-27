@@ -303,6 +303,33 @@ const chunk = require("lodash.chunk")
  * @returns {Promise.<void>}
  */
 
+/**
+ * Xu ly vu command co path
+ */
+
+const buildUrlWithPath = (path, cates) => {
+  let store = []
+
+  const go = store => path => cates => {
+    const shouldBreak = !cates || cates.length === 0
+
+    if (shouldBreak) {
+      return
+    }
+
+    cates.map(cate => {
+      const nextPath = [...path, cate]
+      console.log("Push nextPath", nextPath)
+      store.push(nextPath)
+      go(store)(nextPath)(cate.sub)
+    })
+  }
+
+  go(store)(path)(cates)
+
+  return store
+}
+
 const kiemLinkLuuInterface = async () => {
   // const rootRef = db.collection("nodeRemoteCentral")
 
@@ -313,7 +340,7 @@ const kiemLinkLuuInterface = async () => {
   const crawlingResult = await readDescription(page)(getLinksDes(url))
   let { categories } = crawlingResult
 
-  // categories = categories.slice(0,2)
+  categories = categories.slice(0, 4)
 
   const chunks = chunk(categories, 5)
 
@@ -330,16 +357,16 @@ const kiemLinkLuuInterface = async () => {
         cate.sub = [...cate.sub, ...subCates]
       })
     )
-  }, `Total chunks: ${chunks.length}`)
+  }, console.log(`\x1b[36m%s\x1b[0m`, `Total chunks: ${chunks.length}`))
 
-  console.log(categories)
-  await updateToFirebase("nodeRemoteCentral")("categories")("title")(categories)
+  console.log(JSON.stringify(categories))
+
+  const allPathToCommands = buildUrlWithPath([], categories)
+  console.log(allPathToCommands)
+  // await updateToFirebase("nodeRemoteCentral")("categories")("title")(categories)
+
   process.exit()
 }
-
-/**
- * Xu ly vu command co path
- */
 
 const kiemCommandsLuuThemPath = async () => {
   const browser = await puppeteer.launch(config.launch)
@@ -406,8 +433,8 @@ const kiemCommandsLuuThemPath = async () => {
   // await redo(loop("/library/3-1/index.html"))
 }
 ;(async () => {
-  // await kiemLinkLuuInterface()
-  await kiemCommandsLuuThemPath()
+  await kiemLinkLuuInterface()
+  // await kiemCommandsLuuThemPath()
 })()
 
 module.exports = findCommands
