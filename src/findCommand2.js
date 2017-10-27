@@ -133,12 +133,13 @@ const getLinksDes = url => {
           title: `Count list`,
           evaluate: async () => {
             const groupNodeList = document.querySelectorAll("td div.filelistdevice")
+
             const groupList = Array.apply(null, groupNodeList)
 
             const findCate = aNode => {
-              const link = aNode.querySelector("a").getAttribute("href")
+              const link = `${window.location.origin}${aNode.querySelector("a").getAttribute("href")}`
               const title = aNode.querySelector("a").innerText
-              const count = aNode.querySelector("span.smalltextc").innerText.match(/\d+/)[0]
+              const count = +aNode.querySelector("span.smalltextc").innerText.match(/\d+/)[0]
               return { link, title, count }
             }
 
@@ -191,29 +192,15 @@ const getCommandDes = url => {
           }
         })
 
-        const emptyCommandList = commandList.length === 0
-
-        if (emptyCommandList) {
-          return {
-            commands: commandList,
-            link: window.location.pathname
-          }
-        }
-
         const hasNextPage = document.querySelector("div.forumnextlast.fright a")
-        if (hasNextPage) {
-          return {
-            commands: commandList,
-            link: hasNextPage.getAttribute("href")
-          }
-        }
+        const url = hasNextPage ? `${window.location.origin}${hasNextPage.getAttribute("href")}` : null
 
         return {
           commands: commandList,
-          link: null
+          url
         }
       },
-      storeReturnAsKey: "commands"
+      storeReturnAsKey: "crawledCommands"
     }
   ]
 }
@@ -226,37 +213,39 @@ const findCates = async (browser, url) => {
   return categories
 }
 
-const fincCommands = async (browser, url) => {
-  const page = browser.newPage()
-  await NetworkManager(page)
-
-  const loop = url => async (redoCount, lastResult, finish) => {
-    const runUrl = redoCount === 0 ? url : lastResult.url
-    if (!runUrl) {
-      finish()
-    }
-
-    const { commands: nextCommands, url } = await readDescription(page)(getCommandDes(runUrl))
-    const { commands: lasCommands = [] } = lastResult
-    const commands = [...lasCommands, ...nextCommands]
-    return { commands, url }
-  }
-
-  const { commands } = await redo(loop(url))
-  await page.close()
-  return commands
-}
+// const finxCommands = async (browser, url) => {
+//   const page = browser.newPage()
+//   await NetworkManager(page)
+//
+//   const loop = url => async (redoCount, lastResult, finish) => {
+//     const runUrl = redoCount === 0 ? url : lastResult.url
+//     if (!runUrl) {
+//       finish()
+//     }
+//
+//     const { commands: nextCommands, url } = await readDescription(page)(getCommandDes(runUrl))
+//     const { commands: lasCommands = [] } = lastResult
+//     const commands = [...lasCommands, ...nextCommands]
+//     return { commands, url }
+//   }
+//
+//   const { commands } = await redo(loop(url))
+//   await page.close()
+//   return commands
+// }
 
 const saveCates = async (rootRef, cates) => {
-  cates.map(async cate => {
-    await rootRef
-      .collection("_subCategoriesCollection")
-      .doc(cate.title)
-      .set(cate)
-  })
-
-  const subCategories = cates.reduce((carry, cate) => Object.assign(carry, { [cate.title]: cate.count }), {})
-  await rootRef.doc("subCategories").set(subCategories)
+  // cates.map(async cate => {
+  //   await rootRef
+  //     .collection("_subCategoriesCollection")
+  //     .doc(cate.title)
+  //     .set(cate)
+  // })
+  //
+  // const subCategories = cates.reduce((carry, cate) => Object.assign(carry, { [cate.title]: cate.count }), {})
+  // await rootRef.doc("subCategories").set(subCategories)
+  // await rootRef.set({link: "/asdf"}, {merge: true})
+  await rootRef.set({ name: "/aasf" }, { merge: true })
 }
 
 const saveCommands = async (rootRef, _commands) => {
@@ -285,9 +274,12 @@ const dox = async (browser, cates, commands, rootRef) => {
 
 const run = async (browser, url, rootRef) => {
   const cates = await findCates(browser, url)
-  console.log(cates[3])
+  await saveCates(rootRef, cates)
+
+  // console.log(cates[3])
   process.exit()
-  const commands = await findCommands(browser, url)
+
+  const commands = await finxCommands(browser, url)
   await dox(browser, cates, commands, rootRef)
   if (cates.sub) {
     const nextRootRef = 0
@@ -299,12 +291,123 @@ const findCommands = async () => {
   const browser = await puppeteer.launch(config.launch)
   // const url = "http://files.remotecentral.com/library/3-1/index.html"
   const url = "http://files.remotecentral.com/library/3-1/sony/index.html"
-  const rootRef = db.collection("nodeRemoteCentral")
+  const rootRef = db.collection("nodeRemoteCentral").doc("sony")
   await run(browser, url, rootRef)
 }
 
+// const updateToFirebase = require("./firebase/updateToFirebase")
+
+const chunk = require("lodash.chunk")
+/**
+ * Code kiem link luon het cai interface
+ * @returns {Promise.<void>}
+ */
+
+const kiemLinkLuuInterface = async () => {
+  // const rootRef = db.collection("nodeRemoteCentral")
+
+  const browser = await puppeteer.launch(config.launch)
+  const page = await browser.newPage()
+  await NetworkManager(page)
+  const url = "http://files.remotecentral.com/library/3-1/index.html"
+  const crawlingResult = await readDescription(page)(getLinksDes(url))
+  let { categories } = crawlingResult
+
+  // categories = categories.slice(0,2)
+
+  const chunks = chunk(categories, 5)
+
+  await chunks.reduce(async (carry, chunk) => {
+    await carry
+    return Promise.all(
+      chunk.map(async cate => {
+        const page = await browser.newPage()
+        await NetworkManager(page)
+        const crawlingResult = await readDescription(page)(getLinksDes(cate.link))
+        await page.close()
+        const { categories: subCates } = crawlingResult
+        console.log("\x1b[36m%s\x1b[0m", `FIND ${subCates.length} SUBCATE OF CATE: ${cate.title}`)
+        cate.sub = [...cate.sub, ...subCates]
+      })
+    )
+  }, `Total chunks: ${chunks.length}`)
+
+  console.log(categories)
+  await updateToFirebase("nodeRemoteCentral")("categories")("title")(categories)
+  process.exit()
+}
+
+/**
+ * Xu ly vu command co path
+ */
+
+const kiemCommandsLuuThemPath = async () => {
+  const browser = await puppeteer.launch(config.launch)
+  const page = await browser.newPage()
+  await NetworkManager(page)
+
+  let lastCount = 0
+  const count = count => {
+    lastCount += count
+    console.log("\x1b[36m%s\x1b[0m", lastCount)
+  }
+
+  const finxCommands = async (browser, startUrl) => {
+    const page = await browser.newPage()
+    await NetworkManager(page)
+
+    const loop = async (redoCount, lastResult, finish) => {
+      const firstRun = redoCount === 0
+
+      lastResult = firstRun ? {} : lastResult
+      const runUrl = firstRun ? startUrl : lastResult.url
+
+      if (!runUrl) {
+        finish()
+        return lastResult
+      }
+
+      const { crawledCommands } = await readDescription(page)(getCommandDes(runUrl))
+      const { commands: nextCommands, url } = crawledCommands
+      console.log("nextCommands", nextCommands)
+      const { commands: lasCommands = [] } = lastResult
+      const commands = [...lasCommands, ...nextCommands]
+      return { commands, url }
+    }
+
+    const { commands } = await redo(loop)
+    await page.close()
+    return commands
+  }
+
+  const commands = await finxCommands(
+    browser,
+    "http://files.remotecentral.com/library/3-1/chief_manufacturing/index.html"
+  )
+  console.log(`FIND ${commands.length} COMMANDS`)
+
+  // const loop = url => async (redoCount, lastResult, finish) => {
+  //   console.log("redocount", redoCount)
+  //   const isArr = Array.isArray(url)
+  //   const passInUrl = isArr ? url : [url]
+  //   const list = redoCount === 0 ? passInUrl : lastResult
+  //   console.log("I see list as", list)
+  //
+  //   const shouldBreak = list.length === 0 || redoCount > 10
+  //
+  //   if (shouldBreak) {
+  //     finish()
+  //   }
+  //
+  //   const remainLinksListNotFlat = await Promise.all(list.map(async pathUrl => await run(fullUrl(pathUrl))))
+  //   return remainLinksListNotFlat.reduce((c, list) => [...c, ...list], [])
+  // }
+  //
+  // await redo(loop("/library/3-1/index.html"))
+}
 ;(async () => {
-  await findCommands()
+  // await kiemLinkLuuInterface()
+  await kiemCommandsLuuThemPath()
 })()
 
 module.exports = findCommands

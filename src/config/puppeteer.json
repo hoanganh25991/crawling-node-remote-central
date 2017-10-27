@@ -1,6 +1,6 @@
 {
   "launch":{
-    "timeout":30000,
+    "timeout":60000,
     "args":[
       "--no-sandbox",
       "--disable-setuid-sandbox"
