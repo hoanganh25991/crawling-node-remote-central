@@ -137,10 +137,10 @@ const getLinksDes = url => {
             const groupList = Array.apply(null, groupNodeList)
 
             const findCate = aNode => {
-              const link = `${window.location.origin}${aNode.querySelector("a").getAttribute("href")}`
+              const url = `${window.location.origin}${aNode.querySelector("a").getAttribute("href")}`
               const title = aNode.querySelector("a").innerText
               const count = +aNode.querySelector("span.smalltextc").innerText.match(/\d+/)[0]
-              return { link, title, count }
+              return { url, title, count }
             }
 
             return groupList.map(aNode => {
@@ -350,7 +350,7 @@ const kiemLinkLuuInterface = async () => {
       chunk.map(async cate => {
         const page = await browser.newPage()
         await NetworkManager(page)
-        const crawlingResult = await readDescription(page)(getLinksDes(cate.link))
+        const crawlingResult = await readDescription(page)(getLinksDes(cate.url))
         await page.close()
         const { categories: subCates } = crawlingResult
         console.log("\x1b[36m%s\x1b[0m", `FIND ${subCates.length} SUBCATE OF CATE: ${cate.title}`)
@@ -419,7 +419,7 @@ const kiemCommandsLuuThemPath = async categories => {
     return Promise.all(
       chunk.map(async commandPath => {
         const lastPath = commandPath[commandPath.length - 1]
-        const url = lastPath.link
+        const url = lastPath.url
         console.log("See url", url)
         const commands = await finxCommands(browser, url)
         console.log("Finish find command:", commands)
