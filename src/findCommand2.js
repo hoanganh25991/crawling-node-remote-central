@@ -349,7 +349,7 @@ const kiemLinkLuuInterface = async () => {
   const crawlingResult = await readDescription(page)(getLinksDes(url, level))
   let { categories } = crawlingResult
 
-  categories = categories.slice(0, 4)
+  // categories = categories.slice(0, 4)
 
   const chunks = chunk(categories, 5)
 
@@ -374,6 +374,8 @@ const kiemLinkLuuInterface = async () => {
 
   return categories
 }
+
+const firebaseKey = str => str.replace(/.|#|\$|\/|\[|]/, "")
 
 const kiemCommandsLuuThemPath = async categories => {
   const browser = await puppeteer.launch(config.launch)
@@ -434,21 +436,29 @@ const kiemCommandsLuuThemPath = async categories => {
         // console.log("See url", url)
         const commands = await finxCommands(browser, url)
         // console.log("Finish find command:", commands)
-        const flatPath = commandPath.reduce((carry, cate, index) => Object.assign(carry, { [cate.title]: index }), {})
+        const flatPath = commandPath.reduce((carry, cate, index) => {
+          const key = firebaseKey(cate.title)
+          return Object.assign(carry, { [key]: index })
+        }, {})
         const commandWithPaths = commands.map(command => Object.assign({}, command, { path: flatPath }))
-        console.log("Save commands to firebase. SAMPLE ONE: ", commandWithPaths[0])
+        console.log("\x1b[36m%s\x1b[0m", `Saving ${commandWithPaths.length} commands to firebase`)
+        console.log(`First one: `, commandWithPaths[0])
         await updateToFirebase("nodeRemoteCentral")("commands")("title")(commandWithPaths)
       })
     )
   }, console.log("\x1b[36m%s\x1b[0m", `Total chunks: ${chunks.length}`))
 }
-
-// const buildSearch = require("./firebase/firebaseSupportSearch")
 ;(async () => {
-  const categories = await kiemLinkLuuInterface()
-  // await kiemCommandsLuuThemPath(categories)
-  // await buildSearch()
-  process.exit()
+  try {
+    const categories = await kiemLinkLuuInterface()
+    await kiemCommandsLuuThemPath(categories)
+    const buildSearch = require("./firebase/firebaseSupportSearch")
+    await buildSearch()
+  } catch (err) {
+    console.log(err)
+  } finally {
+    process.exit()
+  }
 })()
 
 module.exports = findCommands
