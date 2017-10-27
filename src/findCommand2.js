@@ -319,7 +319,7 @@ const buildUrlWithPath = (path, cates) => {
 
     cates.map(cate => {
       const nextPath = [...path, cate]
-      console.log("Push nextPath", nextPath)
+      // console.log("Push nextPath", nextPath)
       store.push(nextPath)
       go(store)(nextPath)(cate.sub)
     })
@@ -359,16 +359,12 @@ const kiemLinkLuuInterface = async () => {
     )
   }, console.log(`\x1b[36m%s\x1b[0m`, `Total chunks: ${chunks.length}`))
 
-  console.log(JSON.stringify(categories))
+  await updateToFirebase("nodeRemoteCentral")("categories")("title")(categories)
 
-  const allPathToCommands = buildUrlWithPath([], categories)
-  console.log(allPathToCommands)
-  // await updateToFirebase("nodeRemoteCentral")("categories")("title")(categories)
-
-  process.exit()
+  return categories
 }
 
-const kiemCommandsLuuThemPath = async () => {
+const kiemCommandsLuuThemPath = async categories => {
   const browser = await puppeteer.launch(config.launch)
   const page = await browser.newPage()
   await NetworkManager(page)
@@ -396,7 +392,7 @@ const kiemCommandsLuuThemPath = async () => {
 
       const { crawledCommands } = await readDescription(page)(getCommandDes(runUrl))
       const { commands: nextCommands, url } = crawledCommands
-      console.log("nextCommands", nextCommands)
+      // console.log("nextCommands", nextCommands)
       const { commands: lasCommands = [] } = lastResult
       const commands = [...lasCommands, ...nextCommands]
       return { commands, url }
@@ -407,34 +403,38 @@ const kiemCommandsLuuThemPath = async () => {
     return commands
   }
 
-  const commands = await finxCommands(
-    browser,
-    "http://files.remotecentral.com/library/3-1/chief_manufacturing/index.html"
-  )
-  console.log(`FIND ${commands.length} COMMANDS`)
+  // const commands = await finxCommands(
+  //   browser,
+  //   "http://files.remotecentral.com/library/3-1/chief_manufacturing/index.html"
+  // )
+  // console.log(`FIND ${commands.length} COMMANDS`)
 
-  // const loop = url => async (redoCount, lastResult, finish) => {
-  //   console.log("redocount", redoCount)
-  //   const isArr = Array.isArray(url)
-  //   const passInUrl = isArr ? url : [url]
-  //   const list = redoCount === 0 ? passInUrl : lastResult
-  //   console.log("I see list as", list)
-  //
-  //   const shouldBreak = list.length === 0 || redoCount > 10
-  //
-  //   if (shouldBreak) {
-  //     finish()
-  //   }
-  //
-  //   const remainLinksListNotFlat = await Promise.all(list.map(async pathUrl => await run(fullUrl(pathUrl))))
-  //   return remainLinksListNotFlat.reduce((c, list) => [...c, ...list], [])
-  // }
-  //
-  // await redo(loop("/library/3-1/index.html"))
+  const allPathToCommands = buildUrlWithPath([], categories)
+  // console.log(allPathToCommands)
+  // process.exit()
+  const chunks = chunk(allPathToCommands, 5)
+
+  await chunks.reduce(async (carry, chunk) => {
+    await carry
+    return Promise.all(
+      chunk.map(async commandPath => {
+        const lastPath = commandPath[commandPath.length - 1]
+        const url = lastPath.link
+        console.log("See url", url)
+        const commands = await finxCommands(browser, url)
+        console.log("Finish find command:", commands)
+        const flatPath = commandPath.reduce((carry, cate, index) => Object.assign(carry, { [cate.title]: index }), {})
+        const commandWithPaths = commands.map(command => Object.assign({}, command, { path: flatPath }))
+        console.log("Save commands to firebase. SAMPLE ONE: ", commandWithPaths[0])
+        await updateToFirebase("nodeRemoteCentral")("commands")("title")(commandWithPaths)
+      })
+    )
+  }, console.log("\x1b[36m%s\x1b[0m", `Total chunks: ${chunks.length}`))
 }
 ;(async () => {
-  await kiemLinkLuuInterface()
-  // await kiemCommandsLuuThemPath()
+  const categories = await kiemLinkLuuInterface()
+  await kiemCommandsLuuThemPath(categories)
+  process.exit()
 })()
 
 module.exports = findCommands
