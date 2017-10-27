@@ -328,7 +328,11 @@ const buildUrlWithPath = (path, cates) => {
     cates.map(cate => {
       const nextPath = [...path, cate]
       // console.log("Push nextPath", nextPath)
-      store.push(nextPath)
+
+      if (!cate.sub || cate.sub.length === 0) {
+        store.push(nextPath)
+      }
+
       go(store)(nextPath)(cate.sub)
     })
   }
