@@ -11,6 +11,8 @@ const { redo } = require("./utils")
 const updateToFirestore = require("./firebase/updateToFirestore")
 const updateToFirebase = require("./firebase/updateToFirebase")
 
+const db = require("./firebase/firestoreDb")
+
 const NetworkManager = async page => {
   await page.setRequestInterceptionEnabled(true)
   const requestList = []
@@ -130,11 +132,34 @@ const getLinksDes = url => {
         {
           title: `Count list`,
           evaluate: async () => {
-            const groupNodeList = document.querySelectorAll("td div.filelistdevice a")
+            const groupNodeList = document.querySelectorAll("td div.filelistdevice")
             const groupList = Array.apply(null, groupNodeList)
-            return groupList.map(aNode => aNode.getAttribute("href"))
+
+            const findCate = aNode => {
+              const link = aNode.querySelector("a").getAttribute("href")
+              const title = aNode.querySelector("a").innerText
+              const count = aNode.querySelector("span.smalltextc").innerText.match(/\d+/)[0]
+              return { link, title, count }
+            }
+
+            return groupList.map(aNode => {
+              const cate = findCate(aNode)
+              let sub = []
+              let shouldRun = true
+              let a = aNode
+              do {
+                a = a.nextElementSibling
+                shouldRun = Boolean(a && a.getAttribute("class") && a.getAttribute("class").includes("bulletlarge"))
+                if (shouldRun) {
+                  const cate = findCate(a)
+                  sub.push(cate)
+                }
+              } while (shouldRun)
+              cate.sub = sub
+              return cate
+            })
           },
-          storeReturnAsKey: "linkList"
+          storeReturnAsKey: "categories"
         }
       ]
     }
@@ -193,205 +218,93 @@ const getCommandDes = url => {
   ]
 }
 
-const storeData = fileName => data => {
-  const fs = require("fs")
-  fs.writeFileSync(`${jsonLogDir}/${fileName}`, JSON.stringify(data))
-}
-
-const save = () => {}
-
-const a = (cates, brow, reCraw) => {
-  save(cates)
-  cates.map(cates => {
-    const nextRef = next(ref)
-    const url = cates.url
-    reCraw(brow, url, nextRef)
-  })
-}
-
-const crawling = async (brow, url, ref) => {
-  const cates = find(brow, url)
-
-  if (cates) {
-    a(cates, brow, crawling)
-  }
-
-  if (cates.sub) {
-    const cates = cates.sub
-    a(cates, brow, crawling)
-  }
-}
-
-const run = async (browser, url, fsRef) => {
-  // Find Category data
+const findCates = async (browser, url) => {
   const page = await browser.newPage()
   await NetworkManager(page)
-  /*
-  Category sample:
-
-   {
-      title: "Apple",
-      count: 7,
-      link: "http://abc.com/apple/index.html",
-
-      subcategories: {
-        mac: 5,
-        iphone: 4,
-        macbook: 7,
-      },
-      _subcategoriesCollection: [<black box>],
-
-      commands: {
-        turnOn: true,
-        turnOff: true,
-      },
-      _commandsCollection: [<black box >]
-    }
-   */
-
-  const categories = await readDescription(page)(getLinksDes(url))
-  //
-  // CATEGORY AT THIS POINT ONLY EXIST
-  // {
-  //   LINK,
-  //   TITLE,
-  //   COUNT
-  // }
-  // Save to firestore
-  const saveToFirestore = () => console.log("Saved to firestore")
-
-  /*
-  Shape of ref in firestore
-  db.collections("xxx").doc(cObj.title).set(cObj)
-   */
-
-  // Follow link to find out more
-  categories.map(c => {
-    /*
-    Go inside given url
-    Find out case:
-    1. more link
-    2, see commands
-    */
-
-    const findMoreLinks = () => console.log("Find more links")
-    const findMoreCommands = () => console.log("Find more commands")
-    const categories = findMoreLinks(c.link)
-    const commands = findMoreCommands(c.link)
-
-    if (categories) {
-      /*
-      See more categories
-      So we have to add these guy inside current category
-       */
-      const subCategories = categories.reduce((carry, c) => Object.assign(carry, { [c.title]: c.count }), {})
-
-      // Ok so we give him the subcategories
-      db
-        .collection("xxx")
-        .doc(c.title)
-        .set({
-          subCategories
-        })
-
-      categories.map(c => {
-        db
-          .collection("xxx")
-          .doc(c.title)
-          .collection("_subCategoriesCollection")
-          .doc(c.title)
-          .set(c)
-      })
-    }
-
-    if (commands) {
-      const _commands = commands.reduce(/* build as above*/)
-
-      // We also have a _commandsCollection here
-    }
-  })
-
-  /*
-  Ok out here, after EACH category has go FAR to find out its SUBCATEGORIES/COMMANDS
-  HOW DO I KNOW THAT SHOULD subcategories run AHEAD
-   */
+  const { categories } = await readDescription(page)(getLinksDes(url))
+  await page.close()
+  return categories
 }
 
-const findCommand = async () => {
-  const browser = await puppeteer.launch(config.launch)
-  const newPage = browser.newPage
-
-  const fullUrl = sub => `http://files.remotecentral.com${sub}`
-
-  const first = "/library/3-1/index.html"
-
-  console.log(fullUrl(first))
-
-  const linkList = ["/library/3-1/t%252Ba/index.html"]
-
-  let lastCount = 0
-  const count = count => {
-    lastCount += count
-    console.log("\x1b[36m%s\x1b[0m", lastCount)
-  }
-
-  const run = async url => {
-    const page = await browser.newPage()
-    await NetworkManager(page)
-    const { linkList: _links } = await readDescription(page)(getLinksDes(url))
-    await page.close()
-    const links = _links.map(path => fullUrl(path))
-
-    const noDeepLink = links.length === 0
-
-    let nextStep = [url]
-
-    if (!noDeepLink) {
-      nextStep = links.slice(0, 10)
-      // nextStep = links
-    }
-
-    const pagesRun = nextStep.map(async url => {
-      const page = await browser.newPage()
-      await NetworkManager(page)
-      const crawlingResult = await readDescription(page)(getCommandDes(url))
-      const flatCommands = crawlingResult["commands"]["commands"]
-      count(flatCommands.length)
-      // Save
-      await updateToFirebase("nodeRemoteCentral")("commands")("title")(flatCommands)
-      await page.close()
-      return crawlingResult["commands"]["link"]
-    })
-    const remainLinks = await Promise.all(pagesRun)
-    return remainLinks.filter(link => link)
-  }
+const fincCommands = async (browser, url) => {
+  const page = browser.newPage()
+  await NetworkManager(page)
 
   const loop = url => async (redoCount, lastResult, finish) => {
-    console.log("redocount", redoCount)
-    const isArr = Array.isArray(url)
-    const passInUrl = isArr ? url : [url]
-    const list = redoCount === 0 ? passInUrl : lastResult
-    console.log("I see list as", list)
-
-    const shouldBreak = list.length === 0 || redoCount > 10
-
-    if (shouldBreak) {
+    const runUrl = redoCount === 0 ? url : lastResult.url
+    if (!runUrl) {
       finish()
     }
 
-    const remainLinksListNotFlat = await Promise.all(list.map(async pathUrl => await run(fullUrl(pathUrl))))
-    return remainLinksListNotFlat.reduce((c, list) => [...c, ...list], [])
+    const { commands: nextCommands, url } = await readDescription(page)(getCommandDes(runUrl))
+    const { commands: lasCommands = [] } = lastResult
+    const commands = [...lasCommands, ...nextCommands]
+    return { commands, url }
   }
 
-  await redo(loop("/library/3-1/index.html"))
-
-  await browser.close()
-
-  // console.log(s)
-  process.exit()
+  const { commands } = await redo(loop(url))
+  await page.close()
+  return commands
 }
+
+const saveCates = async (rootRef, cates) => {
+  cates.map(async cate => {
+    await rootRef
+      .collection("_subCategoriesCollection")
+      .doc(cate.title)
+      .set(cate)
+  })
+
+  const subCategories = cates.reduce((carry, cate) => Object.assign(carry, { [cate.title]: cate.count }), {})
+  await rootRef.doc("subCategories").set(subCategories)
+}
+
+const saveCommands = async (rootRef, _commands) => {
+  _commands.map(async command => {
+    await rootRef
+      .collection("_commandsCollection")
+      .doc(command.title)
+      .set(command)
+  })
+
+  const commands = _commands.reduce((carry, command) => Object.assign(carry, { [command.title]: true }), {})
+  await rootRef.doc("commands").set(commands)
+}
+
+const reRun = async (browser, cates, rootRef) => {
+  cates.map(async cate => {
+    await run(browser, cate.url, rootRef)
+  })
+}
+
+const dox = async (browser, cates, commands, rootRef) => {
+  if (cates) await saveCates(rootRef, cates)
+  if (commands) await saveCommands(rootRef, commands)
+  if (cates) await reRun(browser, cates, rootRef)
+}
+
+const run = async (browser, url, rootRef) => {
+  const cates = await findCates(browser, url)
+  console.log(cates[3])
+  process.exit()
+  const commands = await findCommands(browser, url)
+  await dox(browser, cates, commands, rootRef)
+  if (cates.sub) {
+    const nextRootRef = 0
+    await dox(browser, cates.sub, [], nextRootRef)
+  }
+}
+
+const findCommands = async () => {
+  const browser = await puppeteer.launch(config.launch)
+  // const url = "http://files.remotecentral.com/library/3-1/index.html"
+  const url = "http://files.remotecentral.com/library/3-1/sony/index.html"
+  const rootRef = db.collection("nodeRemoteCentral")
+  await run(browser, url, rootRef)
+}
+
 ;(async () => {
-  await findCommand()
+  await findCommands()
 })()
 
-module.exports = findCommand
+module.exports = findCommands
