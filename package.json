@@ -1,7 +1,9 @@
 {
   "dependencies": {
+    "algoliasearch": "^3.24.5",
     "chromeless": "^1.2.0",
     "crypto": "^1.0.1",
+    "dotenv": "^4.0.0",
     "es6-promise": "^4.1.1",
     "firebase-admin": "^5.4.3",
     "isomorphic-fetch": "^2.2.1",
