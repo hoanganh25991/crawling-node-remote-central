@@ -375,7 +375,7 @@ const kiemLinkLuuInterface = async () => {
   return categories
 }
 
-const firebaseKey = str => str.replace(/.|#|\$|\/|\[|]/, "")
+const firebaseKey = str => str.replace(/[.#$/[\]]/, "")
 
 const kiemCommandsLuuThemPath = async categories => {
   const browser = await puppeteer.launch(config.launch)
