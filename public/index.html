@@ -15,8 +15,8 @@
 <h3>Read first 10 categories, posts</h3>
 <script src="https://www.gstatic.com/firebasejs/4.3.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/4.3.1/firebase-database.js"></script>
-<script src="summaryFirebase.js"></script>
 <script>
+const showOnBody = arg => console.log(arg)
 // Initialize Firebase
 const defaultAppConfig = {
   apiKey: "AIzaSyDXbD71Y_uA8ldm1h9S2-6AOgl73UOid1U",
@@ -29,7 +29,7 @@ firebase.initializeApp(defaultAppConfig);
 const defaultDatabase = firebase.database();
 
 // Read categories
-const refCategories = defaultDatabase.ref("nodeLifeTrick/categories");
+const refCategories = defaultDatabase.ref("nodeLifeTrick2/categories");
 const waitForCategories = new Promise(resolve => {
   refCategories.orderByChild("name").limitToFirst(10).once("value", (snapshot) => {
     resolve(snapshot.val())
@@ -40,7 +40,7 @@ waitForCategories.then(cateory => {
 })
 
 // Read posts
-const refPosts = defaultDatabase.ref("nodeLifeTrick/posts");
+const refPosts = defaultDatabase.ref("nodeLifeTrick2/posts");
 const waitForPost = new Promise(resolve => {
   refPosts.orderByChild("postId").limitToFirst(10).once("value", (snapshot) => {
     resolve(snapshot.val())
