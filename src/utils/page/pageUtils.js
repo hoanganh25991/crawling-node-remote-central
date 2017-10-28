@@ -1,5 +1,3 @@
-var exports = (module.exports = {})
-
 const screenshotDir = "screenshot"
 
 const logWithInfo = require("./logWithInfo")

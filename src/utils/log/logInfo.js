@@ -1,4 +1,4 @@
-const store = require("../store")
+const store = require("../../reducers/index")
 const logKey = "_log"
 const defaultState = {
   logLevel: 1,

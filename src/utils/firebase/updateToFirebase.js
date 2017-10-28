@@ -1,4 +1,4 @@
-const { logDebug } = require("./../log/index")
+const { logDebug } = require("../log/index")
 const admin = require("firebase-admin")
 const serviceAccount = require("./../.credential/firebase-service-account.json")
 const thisApp = admin.initializeApp(
@@ -38,23 +38,5 @@ const updateManyObjXs = mainBranch => objXBranch => objXIndexKey => objXs => {
     return updateObjX(mainBranch)(objXBranch)(objXIndexKey)(objX)
   }, 123)
 }
-
-// Remove stores branch
-// (async () => {
-//   const storesRef = db.ref("nodeFoodyStores/stores")
-//   await storesRef.remove()
-//   console.log("Done")
-//   process.exit()
-// })()
-
-// Add one signal branch
-// (async () => {
-//   const mainBranch = "oneSignal"
-//   const objXBranch = "channels"
-//   const objXIndexKey = "appId"
-//   const justNotifyMeChannel = { appId: "1e28d329-d699-4c8e-a4d4-1a4b91afd0f1", appName: "JustNotifyMe"}
-//   await updateObjX(mainBranch)(objXBranch)(objXIndexKey)(justNotifyMeChannel)
-//   process.exit()
-// })()
 
 module.exports = updateManyObjXs

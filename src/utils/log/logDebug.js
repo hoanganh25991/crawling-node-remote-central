@@ -1,4 +1,4 @@
-const store = require("../store")
+const store = require("../../reducers/index")
 
 const logWithInfo = require("./logInfo")
 const logDebug = (state = null) => (logs, style = "%s") => {
