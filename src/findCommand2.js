@@ -456,8 +456,8 @@ const kiemCommandsLuuThemPath = async categories => {
   try {
     const categories = await kiemLinkLuuInterface()
     await kiemCommandsLuuThemPath(categories)
-    const buildSearch = require("./firebase/firebaseSupportSearch")
-    await buildSearch()
+    // const buildSearch = require("./firebase/firebaseSupportSearch")
+    // await buildSearch()
   } catch (err) {
     console.log(err)
   } finally {
