@@ -11,9 +11,11 @@
     "minimist": "^1.2.0",
     "onesignal": "^0.1.2",
     "puppeteer": "~0.11.0",
+    "redux": "^3.7.2",
     "single-line-log": "^1.1.2"
   },
   "devDependencies": {
+    "babel-cli": "^6.26.0",
     "husky": "^0.14.3",
     "lint-staged": "^4.0.0",
     "pipe-to-browser": "^1.0.4",
