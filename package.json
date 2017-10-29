@@ -13,6 +13,7 @@
     "onesignal": "^0.1.2",
     "puppeteer": "~0.11.0",
     "redux": "^3.7.2",
+    "rimraf": "^2.6.2",
     "single-line-log": "^1.1.2"
   },
   "devDependencies": {
