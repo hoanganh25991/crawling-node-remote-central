@@ -7,5 +7,5 @@ export default async (...funcs) => {
     return funcs[0]
   }
 
-  return funcs.reduce(async (a, b) => async (...args) => await a(await b(...args)))
+  return funcs.reduce((a, b) => async (...args) => await a(await b(...args)))
 }
