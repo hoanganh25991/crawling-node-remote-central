@@ -10,9 +10,9 @@ const LogQueue = () => {
       lastPromise = lastPromise.then(() => {
         return new Promise(resolve => {
           setTimeout(() => {
-            sLog(str)
+            console.log(str)
             resolve()
-          }, 100)
+          }, 500)
         })
       })
     },
@@ -52,11 +52,11 @@ const runTest = async path => {
     })
   )
 }
-
 ;(async () => {
   const args = process.argv.slice(2)
   const path = args[0]
   await runTest(path)
+  console.log("Test done")
   _`All test runned`
-  await watchLog
+  // await watchLog
 })()
