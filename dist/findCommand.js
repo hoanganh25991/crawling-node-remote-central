@@ -144,7 +144,7 @@ const findCates = async (browser, url) => {
 
 // const finxCommands = async (browser, url) => {
 //   const page = browser.newPage()
-//   await NetworkManager(page)
+//   await ignoreImgRequest(page)
 //
 //   const loop = url => async (redoCount, lastResult, finish) => {
 //     const runUrl = redoCount === 0 ? url : lastResult.url

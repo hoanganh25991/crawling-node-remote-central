@@ -13,12 +13,9 @@ const reservedKeysInPageAction = () => Object.keys(samplePageAction)
 const getPageActionName = pageAction => {
   const keys = Object.keys(pageAction)
   const reservedKeys = reservedKeysInPageAction()
-
   // Pop the first action
   const pageActionName = keys.filter(key => !reservedKeys.includes(key))[0]
-
   if (!pageActionName) throw new Error("Cant find actionName")
-
   return pageActionName
 }
 
@@ -29,13 +26,13 @@ const queuePageActionList = list => lastReturn => async callback => {
   }, lastReturn)
 }
 
-const enhancePage = page => {
+const pageRunFunction = page => {
   if (page.runFunction) return
   page.runFunction = callback => callback()
 }
 
 const runPageAction = page => lastReturn => async pageAction => {
-  enhancePage(page)
+  pageRunFunction(page)
   const { title, actions: pageActionList } = pageAction
 
   // Has child actions, self call to callApiUrl it
@@ -80,4 +77,15 @@ const readDescription = page => async description => {
   await queuePageActionList(description)(storeReturn)(runPageAction(page))
   // logWithInfo(["storeReturn", storeReturn])
   return storeReturn
+}
+
+const TinyPage = require("./TinyPage")
+
+const _queuePageActions = browser => description => {
+  const pageActions = [...description]
+  const page = TinyPage(browser)
+  pageActions.reduce(async (carry, pageAction) => {
+    const lastResult = await carry
+    runPageAction(lastResult, pageAction)
+  }, Promise.resolve())
 }
