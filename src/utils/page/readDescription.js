@@ -1,4 +1,4 @@
-const TinyPage = require("./TinyPage")
+import TinyPage from "./TinyPage"
 const screenshotDir = "screenshot"
 const quality = 10
 
@@ -23,13 +23,20 @@ const getPageActionName = pageAction => {
   return pageActionName
 }
 
-const runPageAction = page => async (lastReturn, pageAction) => {
+const queuePageActions = async (page, lastResult, pageActions) => {
+  return await pageActions.reduce(async (carry, pageAction) => {
+    const lastResult = await carry
+    return runPageAction(page, lastResult, pageAction)
+  }, Promise.resolve(lastResult))
+}
+
+const runPageAction = async (page, lastReturn, pageAction) => {
   const { title, actions: pageActions } = pageAction
 
   // Has child actions, self call to callApiUrl it
   const hasChildActions = Boolean(pageActions)
 
-  if (hasChildActions) return await queuePageActionList(pageActions)
+  if (hasChildActions) return await queuePageActions(page, lastReturn, pageActions)
 
   // Run page action
   const actionName = getPageActionName(pageAction)
@@ -58,18 +65,12 @@ const runPageAction = page => async (lastReturn, pageAction) => {
   }
 }
 
-const queuePageActions = async (storeReturn, description) => {
-  const pageActions = [...description]
+const readDescription = async description => {
   const page = await TinyPage()
-
-  await pageActions.reduce(async (carry, pageAction) => {
-    const lastResult = await carry
-    return runPageAction(page)(lastResult, pageAction)
-  }, Promise.resolve(storeReturn))
-
+  const pageActions = [...description]
+  const storeReturn = await queuePageActions(page, {}, pageActions)
   await page.close()
-
   return storeReturn
 }
 
-export default queuePageActions
+export default readDescription

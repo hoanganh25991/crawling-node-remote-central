@@ -1,4 +1,3 @@
-const { logDebug } = require("../log/index")
 const admin = require("firebase-admin")
 const serviceAccount = require("./firebase.config.json")
 const thisApp = admin.initializeApp(
@@ -10,8 +9,7 @@ const thisApp = admin.initializeApp(
 )
 const db = thisApp.database()
 
-const updateObjX = mainBranch => objXBranch => objXIndexKey => async objX => {
-  const lx = logDebug.indent(1)
+const updateObjX = (mainBranch, objXBranch, objXIndexKey = "id") => async objX => {
   // Find if post exist
   const { [objXIndexKey]: id } = objX
   const refToObjXBranch = db.ref(`${mainBranch}/${objXBranch}`)
@@ -26,16 +24,16 @@ const updateObjX = mainBranch => objXBranch => objXIndexKey => async objX => {
   })
 
   const objXKey = sameObjX ? Object.keys(sameObjX)[0] : refToObjXBranch.push().key
-  logDebug(lx)(`Saving store...`)
-  logDebug(lx)(`ObjX ${objXIndexKey} : ${id}`)
-  logDebug(lx)(`ObjX key: ${objXKey}`)
+  // logDebug(lx)(`Saving store...`)
+  // logDebug(lx)(`ObjX ${objXIndexKey} : ${id}`)
+  // logDebug(lx)(`ObjX key: ${objXKey}`)
   await db.ref(`${mainBranch}/${objXBranch}/${objXKey}`).update(objX)
 }
 
-const updateManyObjXs = mainBranch => objXBranch => objXIndexKey => objXs => {
+const updateManyObjXs = (mainBranch, objXBranch, objXIndexKey) => objXs => {
   return objXs.reduce(async (carry, objX) => {
     await carry
-    return updateObjX(mainBranch)(objXBranch)(objXIndexKey)(objX)
+    return updateObjX(mainBranch, objXBranch, objXIndexKey)(objX)
   }, 123)
 }
 

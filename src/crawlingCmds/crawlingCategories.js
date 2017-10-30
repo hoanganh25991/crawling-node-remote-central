@@ -74,6 +74,7 @@ const buildCategoryWithSubList = async url => {
       chunk.map(async cate => {
         const crawlingResult = await readDescription(getLinksDes(cate.url, nextLevel))
         const { crawledCategories: subCates } = crawlingResult
+        console.log(`\x1b[36m${subCates[0]}\x1b[0m`)
         cate.sub = [...cate.sub, ...subCates]
       })
     )

@@ -15,11 +15,13 @@ import readDescription from "./readDescription"
       }
     ]
 
-    const crawlingReturn = await readDescription({}, crawlingTitle)
+    const crawlingReturn = await readDescription(crawlingTitle)
 
     const { pageTitle } = crawlingReturn
     const pass = pageTitle === "Google"
+
     if (!pass) return console.log(`\x1b[41m[FAIL]\x1b[0m Read description fail!`)
+
     return console.log(`\x1b[42m[PASS]\x1b[0m Read description`)
   } catch (err) {
     console.log(err)

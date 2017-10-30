@@ -60,4 +60,4 @@ TinyPage.closeBrowser = async () => {
   if (browser) await browser.close()
 }
 
-module.exports = TinyPage
+export default TinyPage
