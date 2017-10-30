@@ -5,9 +5,9 @@ import { iniState as readState, reducers as readReducers } from "./readDescripti
 ;(async () => {
   const reducers = combineReducers({ readState: readReducers })
   const store = createStore(reducers)
-  const _readDescription = readDescription(null, store.dispatch)
+  const _readDescription = readDescription(store.dispatch)
 
-  store.subscribe(() => console.log(store.getState()))
+  store.subscribe(() => console.log(store.getState().readState.log.msg))
 
   try {
     const crawlingTitle = [

@@ -23,15 +23,15 @@ export const getPageActionName = pageAction => {
   return pageActionName
 }
 
-export const queuePageActions = (model, dispatch) => async (page, lastResult, pageActions) => {
+export const queuePageActions = dispatch => async (page, lastResult, pageActions) => {
   return await pageActions.reduce(async (carry, pageAction) => {
     const lastResult = await carry
-    return runPageAction(model, dispatch)(page, lastResult, pageAction)
+    return runPageAction(dispatch)(page, lastResult, pageAction)
   }, Promise.resolve(lastResult))
 }
 
-export const runPageAction = (model, dispatch) => async (page, lastReturn, pageAction) => {
-  dispatch({ type: "LOG", pageAction })
+export const runPageAction = dispatch => async (page, lastReturn, pageAction) => {
+  dispatch({ type: "LOG", msg: "Running page action" })
   const { title, actions: pageActions } = pageAction
 
   // Has child actions, self call to callApiUrl it
@@ -45,6 +45,7 @@ export const runPageAction = (model, dispatch) => async (page, lastReturn, pageA
   const args = Array.isArray(params) ? params : [params]
 
   try {
+    dispatch({ type: "LOG", msg: `Page run ${actionName}` })
     const result = await page[actionName](...args)
 
     // Should take screenshot
@@ -67,18 +68,21 @@ export const runPageAction = (model, dispatch) => async (page, lastReturn, pageA
   }
 }
 
-const readDescription = (model, dispatch) => async description => {
-  dispatch({ type: "LOG", description })
+const readDescription = dispatch => async description => {
+  dispatch({ type: "LOG", msg: "Reading description" })
   const page = await TinyPage()
   const pageActions = [...description]
-  const storeReturn = await queuePageActions(model, dispatch)(page, {}, pageActions)
+  const storeReturn = await queuePageActions(dispatch)(page, {}, pageActions)
   await page.close()
-  dispatch({ type: "LOG", storeReturn })
+  dispatch({ type: "LOG", msg: "Crawling done" })
   return storeReturn
 }
 
 export default readDescription
 
+/**
+ * Reducers
+ */
 export const iniState = {}
 export const reducers = (state = iniState, action) => {
   const { type, ...others } = action
