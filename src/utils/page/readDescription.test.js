@@ -4,7 +4,7 @@ import readDescription from "./readDescription"
     const crawlingTitle = [
       {
         title: `Go to google.com`,
-        goto: `www.google.com`
+        goto: `https://www.google.com.vn`
       },
       {
         title: `Get title`,
@@ -15,14 +15,12 @@ import readDescription from "./readDescription"
       }
     ]
 
-    const crawlingReturn = await readDescription(crawlingTitle)
+    const crawlingReturn = await readDescription({}, crawlingTitle)
+
     const { pageTitle } = crawlingReturn
-
     const pass = pageTitle === "Google"
-
-    if (!pass) return console.log("FAIL")
-
-    return console.log("SUCCESS")
+    if (!pass) return console.log(`\x1b[41m[FAIL]\x1b[0m Read description fail!`)
+    return console.log(`\x1b[42m[PASS]\x1b[0m Read description`)
   } catch (err) {
     console.log(err)
   } finally {

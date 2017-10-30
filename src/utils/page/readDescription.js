@@ -62,16 +62,14 @@ const queuePageActions = async (storeReturn, description) => {
   const pageActions = [...description]
   const page = await TinyPage()
 
-  return await pageActions.reduce(async (carry, pageAction) => {
+  await pageActions.reduce(async (carry, pageAction) => {
     const lastResult = await carry
     return runPageAction(page)(lastResult, pageAction)
   }, Promise.resolve(storeReturn))
-}
 
-const readDescription = page => async description => {
-  const storeReturn = {}
-  await queuePageActions(description, storeReturn)
+  await page.close()
+
   return storeReturn
 }
 
-export default readDescription
+export default queuePageActions
