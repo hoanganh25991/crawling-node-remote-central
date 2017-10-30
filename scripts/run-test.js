@@ -27,6 +27,7 @@ const _ = (strTemplate, ...holes) => myQueue(strTemplate[0] + holes.join(" "))
 const runTest = async _path => {
   !_path && _`No path specified, try with "src"`
   const path = _path ? _path : "src"
+
   _`Scan: ${path}`
   const exist = fs.existsSync(path)
 
@@ -38,18 +39,16 @@ const runTest = async _path => {
   if (!isDir && !isTestFile) return
 
   if (!isDir && isTestFile) {
-    const testFile = path
     _`Running test`
+    const testFile = path
     const cmd = `babel-node ${testFile}`
 
-    let execCmdProc
-
     try {
-      const testResult = await new Promise(
-        resolve =>
-          (execCmdProc = exec(cmd, (err, stdout) => {
-            resolve(stdout)
-          }))
+      const testResult = await new Promise((resolve, reject) =>
+        exec(cmd, (err, stdout) => {
+          if (err) return reject(err)
+          return resolve(stdout)
+        })
       )
       _`${testResult}`
     } catch (err) {
