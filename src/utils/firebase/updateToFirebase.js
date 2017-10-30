@@ -1,6 +1,6 @@
 const { logDebug } = require("../log/index")
 const admin = require("firebase-admin")
-const serviceAccount = require("./../.credential/firebase-service-account.json")
+const serviceAccount = require("./firebase.config.json")
 const thisApp = admin.initializeApp(
   {
     credential: admin.credential.cert(serviceAccount),
