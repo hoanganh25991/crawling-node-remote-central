@@ -28,7 +28,7 @@ showOnBody(defaultAppConfig)
 firebase.initializeApp(defaultAppConfig);
 const defaultDatabase = firebase.database();
 
-// Read categories
+// Read crawledCategories
 const refCategories = defaultDatabase.ref("nodeLifeTrick2/categories");
 const waitForCategories = new Promise(resolve => {
   refCategories.orderByChild("name").limitToFirst(10).once("value", (snapshot) => {
