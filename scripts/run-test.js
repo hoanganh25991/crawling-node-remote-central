@@ -12,7 +12,7 @@ const LogQueue = () => {
           setTimeout(() => {
             console.log(str)
             resolve()
-          }, 500)
+          }, 200)
         })
       })
     },
@@ -20,11 +20,13 @@ const LogQueue = () => {
   }
 }
 
-const { asyncLog: myQueue, watchLog } = LogQueue()
+const { asyncLog: myQueue } = LogQueue()
 
 const _ = (strTemplate, ...holes) => myQueue(strTemplate[0] + holes.join(" "))
 
-const runTest = async path => {
+const runTest = async _path => {
+  !_path && _`No path specified, try with "src"`
+  const path = _path ? _path : "src"
   _`Scan: ${path}`
   const exist = fs.existsSync(path)
 
@@ -37,9 +39,14 @@ const runTest = async path => {
 
   if (!isDir && isTestFile) {
     const testFile = path
-    _`Run test file ${testFile}`
+    _`Running test`
     const cmd = `node ${testFile}`
-    await new Promise(resolve => exec(cmd, resolve))
+    const testResult = await new Promise(resolve =>
+      exec(cmd, (err, stdout) => {
+        resolve(stdout)
+      })
+    )
+    _`${testResult}`
     return
   }
 
@@ -56,7 +63,5 @@ const runTest = async path => {
   const args = process.argv.slice(2)
   const path = args[0]
   await runTest(path)
-  console.log("Test done")
   _`All test runned`
-  // await watchLog
 })()

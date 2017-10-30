@@ -1,7 +1,7 @@
 ;(async () => {
   const exec = require("child_process").exec
   const rimraf = require("rimraf")
-  const _ = strTemplate => console.log(strTemplate[0])
+  const _ = (strTemplate, ...holes) => console.log(strTemplate[0] + holes.join(" "))
   const node7PresetPath = `/usr/local/share/.config/yarn/global/node_modules/babel-preset-node7`
   const cmd = `babel ${__dirname}/src --out-dir=${__dirname}/dist --presets=${node7PresetPath}`
   const err = await new Promise(resolve => exec(cmd, resolve))
