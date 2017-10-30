@@ -1,4 +1,4 @@
-export const compose = (...funcs) => {
+export default async (...funcs) => {
   if (funcs.length === 0) {
     return arg => arg
   }
@@ -7,5 +7,5 @@ export const compose = (...funcs) => {
     return funcs[0]
   }
 
-  return funcs.reduce((a, b) => (...args) => a(b(...args)))
+  return funcs.reduce(async (a, b) => async (...args) => await a(await b(...args)))
 }

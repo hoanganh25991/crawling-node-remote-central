@@ -18,5 +18,5 @@
 
   if (err2) return _`\x1b[41m[ERR]\x1b[0m Exec built file fail`
   await new Promise(resolve => rimraf(`${__dirname}/dist`, resolve))
-  _`\x1b[42m[PASS]\x1b[0m babel build`
+  _`\x1b[42m[PASS]\x1b[0m Babel build`
 })()

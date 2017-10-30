@@ -12,7 +12,7 @@ const LogQueue = () => {
           setTimeout(() => {
             console.log(str)
             resolve()
-          }, 200)
+          }, 50)
         })
       })
     },
@@ -40,13 +40,22 @@ const runTest = async _path => {
   if (!isDir && isTestFile) {
     const testFile = path
     _`Running test`
-    const cmd = `node ${testFile}`
-    const testResult = await new Promise(resolve =>
-      exec(cmd, (err, stdout) => {
-        resolve(stdout)
-      })
-    )
-    _`${testResult}`
+    const cmd = `babel-node ${testFile}`
+
+    let execCmdProc
+
+    try {
+      const testResult = await new Promise(
+        resolve =>
+          (execCmdProc = exec(cmd, (err, stdout) => {
+            resolve(stdout)
+          }))
+      )
+      _`${testResult}`
+    } catch (err) {
+      _`[ERR] Test file: ${testFile}`
+    }
+
     return
   }
 
