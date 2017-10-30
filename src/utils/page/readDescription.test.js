@@ -1,5 +1,14 @@
 import readDescription from "./readDescription"
+import { combineReducers, createStore } from "redux"
+
+import { iniState as readState, reducers as readReducers } from "./readDescription"
 ;(async () => {
+  const reducers = combineReducers({ readState: readReducers })
+  const store = createStore(reducers)
+  const _readDescription = readDescription(null, store.dispatch)
+
+  store.subscribe(() => console.log(store.getState()))
+
   try {
     const crawlingTitle = [
       {
@@ -15,7 +24,7 @@ import readDescription from "./readDescription"
       }
     ]
 
-    const crawlingReturn = await readDescription(crawlingTitle)
+    const crawlingReturn = await _readDescription(crawlingTitle)
 
     const { pageTitle } = crawlingReturn
     const pass = pageTitle === "Google"
