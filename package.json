@@ -26,7 +26,7 @@
   "scripts": {
     "precommit": "lint-staged",
     "start": "node index.js 2>&1 | pipe-to-browser",
-    "test": "node scripts/run-test.js"
+    "test": "babel-node scripts/run-test.js"
   },
   "lint-staged": {
     "*.js": [
