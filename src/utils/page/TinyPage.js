@@ -1,6 +1,8 @@
 import puppeteer from "puppeteer"
 import compose from "../compose"
 
+const openDefaultPage = async browser => await browser.newPage()
+
 const ignoreImgRequest = async page => {
   await page.setRequestInterceptionEnabled(true)
   const requestList = []
@@ -26,7 +28,10 @@ const ignoreImgRequest = async page => {
   return page
 }
 
-const openDefaultPage = async browser => await browser.newPage()
+const addPageRunFunction = page => {
+  if (!page.runFunction) page.runFunction = callback => callback()
+  return page
+}
 
 const config = {
   timeout: 30000,
@@ -46,7 +51,7 @@ const TinyPage = async (option = {}) => {
 
   if (!browser) browser = await puppeteer.launch(mergedOption)
 
-  const tinyPage = await compose(ignoreImgRequest, openDefaultPage)
+  const tinyPage = await compose(addPageRunFunction, ignoreImgRequest, openDefaultPage)
 
   return await tinyPage(browser)
 }
