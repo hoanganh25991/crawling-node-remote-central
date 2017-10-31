@@ -1,6 +1,7 @@
 const chunk = require("lodash.chunk")
 // const updateToFirebase = require("../utils/firebase/updateToFirebase")
 import _readDescription from "../utils/page/readDescription"
+// import TinyPage from "../utils/page/TinyPage"
 
 const getLinksDes = (url, level) => {
   return [
@@ -82,13 +83,14 @@ const crawlingCategories = (getState, describe) => async url => {
       chunk.map(async cate => {
         const crawlingResult = await readDescription(getLinksDes(cate.url, nextLevel))
         const { crawledCategories: subCates } = crawlingResult
-        describe({ type: "LOG", msg: `\x1b[36m$[${cate.title}] Found ${subCates.length} sub categories\x1b[0m` })
+        describe({ type: "LOG", msg: `\x1b[36m[${cate.title}] Found ${subCates.length} sub categories\x1b[0m` })
         cate.sub = [...cate.sub, ...subCates]
       })
     )
   }, describe({ type: "LOG", msg: `\x1b[36mTotal queue 'open page': ${chunks.length}\x1b[0m` }))
 
   // await updateToFirebase("nodeRemoteCentral")("categories")("title")(categories)
+  // await TinyPage.closeBrowser()
   return categories
 }
 

@@ -1,7 +1,7 @@
 import crawlingCategories from "./crawlingCategories"
 import { combineReducers, createStore } from "redux"
 import { logReducers, LogToConsole } from "../reducers/logReducers"
-
+import TinyPage from "../utils/page/TinyPage"
 ;(async () => {
   const store = createStore(combineReducers({ logState: logReducers }))
   const _crawling = crawlingCategories(() => {}, store.dispatch)
@@ -21,7 +21,8 @@ import { logReducers, LogToConsole } from "../reducers/logReducers"
     }
   } catch (err) {
     _(err)
+    return _(`\x1b[41m[FAIL]\x1b[0m ${TEST_CASE}`)
   } finally {
-    process.exit()
+    await TinyPage.closeBrowser()
   }
 })()
