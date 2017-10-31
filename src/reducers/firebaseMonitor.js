@@ -7,6 +7,12 @@ export const iniState = {
   objXBranch: "logMsgs"
 }
 
+/**
+ * State monitor by
+ * Push state into firebase
+ * @param getState
+ * @param store
+ */
 export const firebaseMonitor = (getState, store) => {
   const customDispatch = action => action && action.msg && console.log(action.msg)
   const _primitiveUpdateToFB = primitiveUpdateToFirebase(() => ({}), customDispatch)

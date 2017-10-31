@@ -16,6 +16,12 @@ const data = {
   included_segments: ["TestUsers"]
 }
 
+/**
+ * Send notification by OneSingal
+ * @param content
+ * @param messageObj
+ * @returns {Promise}
+ */
 const sendNotification = (content, messageObj = null) => {
   // Merge
   Object.assign(

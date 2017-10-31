@@ -22,7 +22,6 @@ const ignoreImgRequest = async page => {
   })
 
   if (!page.requestList) page.requestList = () => requestList
-
   if (!page.requestSummary) page.requestSummary = () => console.log(`[Network] Page hit ${requestList.length} requests`)
 
   return page

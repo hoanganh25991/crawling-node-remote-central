@@ -1,3 +1,9 @@
+/**
+ * Handle log in code
+ * @param state
+ * @param action
+ * @returns {*}
+ */
 export const logReducers = (state = { msg: "", level: 0 }, action) => {
   const { type, ...others } = action
   switch (type) {
@@ -21,6 +27,12 @@ export const logReducers = (state = { msg: "", level: 0 }, action) => {
   }
 }
 
+/**
+ * State monitor (only log msg) by
+ * Dump into console
+ * @param store
+ * @constructor
+ */
 export const LogToConsole = store => {
   let lastLogState = null
 

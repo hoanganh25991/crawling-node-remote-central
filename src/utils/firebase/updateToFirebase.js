@@ -30,6 +30,11 @@ const updateObjX = (getState, describe) => (mainBranch, objXBranch, objXIndexKey
   await db.ref(`${mainBranch}/${objXBranch}/${objXKey}`).update(objX)
 }
 
+/**
+ * Save array of objectX to firebase
+ * @param getState
+ * @param describe
+ */
 const updateManyObjXs = (getState, describe) => (mainBranch, objXBranch, objXIndexKey) => objXs => {
   return objXs.reduce(async (carry, objX) => {
     await carry

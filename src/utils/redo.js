@@ -1,4 +1,9 @@
-const redo = async callback => {
+/**
+ * Redo an callback
+ * @param callback
+ * @returns {Promise.<*>}
+ */
+export const redo = async callback => {
   let redoCount = 0
   let lastResult = null
   let shouldRun = true

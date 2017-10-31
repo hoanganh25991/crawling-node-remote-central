@@ -59,6 +59,12 @@ const getLinksDes = (url, level) => {
   ]
 }
 
+/**
+ * Crawling categories
+ * @param getState
+ * @param describe
+ * @constructor
+ */
 const CrawlingCategories = (getState, describe) => async url => {
   describe({ type: "LOG", msg: `\x1b[36m<<< CRAWLING CATEGORIES >>>\x1b[0m` })
 

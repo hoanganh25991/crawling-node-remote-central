@@ -19,6 +19,11 @@ const updateObjX = (getState, describe) => (mainBranch, objXBranch) => async pri
   return key
 }
 
+/**
+ * Save array of primitive value to firebase
+ * @param getState
+ * @param describe
+ */
 const updateManyObjXs = (getState, describe) => (mainBranch, objXBranch) => primitives => {
   return Promise.all(
     primitives.map(async primitive => {

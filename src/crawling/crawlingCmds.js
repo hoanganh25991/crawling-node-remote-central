@@ -103,6 +103,12 @@ const findCommands = (getState, describe) => async startUrl => {
 
 const firebaseKey = str => str.replace(/[.#$/[\]]/, "")
 
+/**
+ * Crawling commands
+ * @param getState
+ * @param describe
+ * @constructor
+ */
 const CrawlingCommadsWithPath = (getState, describe) => async categories => {
   describe({ type: "LOG", msg: `\x1b[36m<<< CRAWLING COMMANDS >>>\x1b[0m` })
   describe({ type: "LOG", msg: `Build url with path from categories input` })

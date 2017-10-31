@@ -71,6 +71,12 @@ export const runPageAction = (getState, describe) => async (page, lastReturn, pa
   }
 }
 
+/**
+ * Read description
+ * Then run crawling
+ * @param getState
+ * @param describe
+ */
 const readDescription = (getState, describe) => async description => {
   describe({ type: "LOG", msg: "Reading description", level: 0 })
 

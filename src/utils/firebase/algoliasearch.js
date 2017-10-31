@@ -43,6 +43,10 @@ const initialImport = (resolve, reject) => dataSnapshot => {
   })
 }
 
+/**
+ * Build index search on firebase collection
+ * @returns {Promise.<void>}
+ */
 const run = async () => {
   const commandsRef = db.ref("nodeRemoteCentral/commands")
   await new Promise((resolve, reject) => {

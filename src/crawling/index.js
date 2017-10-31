@@ -1,6 +1,11 @@
 import crawlingCategories from "./crawlingCategories"
 import crawlingCmds from "./crawlingCmds"
 
+/**
+ * Compile crawling categories & commands
+ * @param getState
+ * @param dispatch
+ */
 const run = (getState, dispatch) => async () => {
   const _crawlingCategories = crawlingCategories(getState, dispatch)
   const _crawlingCmds = crawlingCmds(getState, dispatch)

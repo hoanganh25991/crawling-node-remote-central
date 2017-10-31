@@ -1,3 +1,8 @@
+/**
+ * Compose func can use with async
+ * @param funcs
+ * @returns {Promise.<*>}
+ */
 export default async (...funcs) => {
   if (funcs.length === 0) {
     return arg => arg
