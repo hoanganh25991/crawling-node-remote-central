@@ -4,7 +4,8 @@ import { logReducers, LogToConsole } from "../reducers/logReducers"
 import TinyPage from "../utils/page/TinyPage"
 ;(async () => {
   const store = createStore(combineReducers({ logState: logReducers }))
-  const _crawling = crawlingCategories(() => {}, store.dispatch)
+  const getState = () => ({})
+  const _crawling = crawlingCategories(getState, store.dispatch)
   LogToConsole(store)
 
   const TEST_CASE = `Crawling categories`
