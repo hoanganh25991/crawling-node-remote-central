@@ -5,7 +5,7 @@ export const thisApp = admin.initializeApp(
     credential: admin.credential.cert(serviceAccount),
     databaseURL
   },
-  "updateToFirebase"
+  "primitiveUpdateToFirebase"
 )
 export const db = thisApp.database()
 

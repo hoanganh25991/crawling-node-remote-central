@@ -1,6 +1,6 @@
 import redo from "../utils/redo"
 import chunk from "lodash.chunk"
-// const updateToFirebase = require("../utils/firebase/updateToFirebase")
+// const primitiveUpdateToFirebase = require("../utils/firebase/primitiveUpdateToFirebase")
 import readDescription from "../utils/page/readDescription"
 import TinyPage from "../utils/page/TinyPage"
 
@@ -147,7 +147,7 @@ const CrawlingCommadsWithPath = (getState, describe) => async categories => {
 
         describe({ type: "LOG", msg: `\x1b[36mFound ${commandWithPaths.length} commands\x1b[0m` })
         describe({ type: "LOG", msg: `First one: ${JSON.stringify(commands[0], null, 2)}` })
-        // await updateToFirebase("nodeRemoteCentral")("commands")("title")(commandWithPaths)
+        // await primitiveUpdateToFirebase("nodeRemoteCentral")("commands")("title")(commandWithPaths)
       })
     )
   }, describe({ type: "LOG", msg: `\x1b[36mTotal queue 'Open page': ${chunks.length}\x1b[0m` }))

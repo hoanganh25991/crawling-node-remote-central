@@ -1,5 +1,5 @@
 const chunk = require("lodash.chunk")
-// const updateToFirebase = require("../utils/firebase/updateToFirebase")
+// const primitiveUpdateToFirebase = require("../utils/firebase/primitiveUpdateToFirebase")
 import _readDescription from "../utils/page/readDescription"
 
 const getLinksDes = (url, level) => {
@@ -88,7 +88,7 @@ const CrawlingCategories = (getState, describe) => async url => {
     )
   }, describe({ type: "LOG", msg: `\x1b[36mTotal queue 'Open page': ${chunks.length}\x1b[0m` }))
 
-  // await updateToFirebase("nodeRemoteCentral")("categories")("title")(categories)
+  // await primitiveUpdateToFirebase("nodeRemoteCentral")("categories")("title")(categories)
   return categories
 }
 
