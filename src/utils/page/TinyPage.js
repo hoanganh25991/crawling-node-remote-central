@@ -39,6 +39,17 @@ const config = {
 }
 
 let browser = null
+let firstRun = true
+let browserPromise = null
+const initBrowser = mergedOption => {
+  if (!firstRun && browserPromise) {
+    console.log("Not first run")
+    return browserPromise
+  }
+
+  firstRun = false
+  return (browserPromise = puppeteer.launch(mergedOption))
+}
 
 /**
  * Create tiny page
@@ -48,7 +59,7 @@ let browser = null
  */
 export const TinyPage = async (option = {}) => {
   const mergedOption = Object.assign({}, config, option)
-  if (!browser) browser = await puppeteer.launch(mergedOption)
+  if (!browser) browser = await initBrowser(mergedOption)
   const tinyPage = await compose(addPageRunFunction, ignoreImgRequest, openDefaultPage)
   return await tinyPage(browser)
 }
