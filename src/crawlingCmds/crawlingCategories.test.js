@@ -13,12 +13,8 @@ import TinyPage from "../utils/page/TinyPage"
   try {
     const url = "http://files.remotecentral.com/library/3-1/index.html"
     const categories = await _crawling(url)
-
-    if (!categories) {
-      return _(`\x1b[41m[FAIL]\x1b[0m ${TEST_CASE}`)
-    } else {
-      return _(`\x1b[42m[PASS]\x1b[0m ${TEST_CASE}`)
-    }
+    const pass = categories.length > 0
+    return pass ? _(`\x1b[42m[PASS]\x1b[0m ${TEST_CASE}`) : _(`\x1b[41m[FAIL]\x1b[0m ${TEST_CASE}`)
   } catch (err) {
     _(err)
     return _(`\x1b[41m[FAIL]\x1b[0m ${TEST_CASE}`)

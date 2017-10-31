@@ -2,7 +2,7 @@ import readDescription from "./readDescription"
 import { combineReducers, createStore } from "redux"
 import { reducers as readDescriptionReducers } from "./readDescription"
 import { logReducers, LogToConsole } from "../../reducers/logReducers"
-
+import TinyPage from "./TinyPage"
 ;(async () => {
   const store = createStore(combineReducers({ readState: readDescriptionReducers, logState: logReducers }))
 
@@ -41,15 +41,11 @@ import { logReducers, LogToConsole } from "../../reducers/logReducers"
     const crawlingReturn = await _readDescription(crawlingTitle)
     const { pageTitle } = crawlingReturn
     const pass = pageTitle === "Google"
-
-    if (!pass) {
-      return _(`\x1b[41m[FAIL]\x1b[0m ${TEST_CASE}`)
-    } else {
-      return _(`\x1b[42m[PASS]\x1b[0m ${TEST_CASE}`)
-    }
+    return pass ? _(`\x1b[42m[PASS]\x1b[0m ${TEST_CASE}`) : _(`\x1b[41m[FAIL]\x1b[0m ${TEST_CASE}`)
   } catch (err) {
     _(err)
+    return _(`\x1b[41m[FAIL]\x1b[0m ${TEST_CASE}`)
   } finally {
-    process.exit()
+    await TinyPage.closeBrowser()
   }
 })()
