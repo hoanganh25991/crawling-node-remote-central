@@ -1,10 +1,10 @@
-import CrawlingCmds from "./CrawlingCmds"
+import crawlingCmds from "./crawlingCmds"
 import { combineReducers, createStore } from "redux"
 import { logReducers, LogToConsole } from "../reducers/logReducers"
 import TinyPage from "../utils/page/TinyPage"
 ;(async () => {
   const store = createStore(combineReducers({ logState: logReducers }))
-  const crawlingCmds = CrawlingCmds(() => {}, store.dispatch)
+  const _crawlingCmds = crawlingCmds(() => {}, store.dispatch)
   LogToConsole(store)
 
   const TEST_CASE = `Crawling commands`
@@ -38,7 +38,7 @@ import TinyPage from "../utils/page/TinyPage"
         url: "http://files.remotecentral.com/library/3-1/arcam/index.html"
       }
     ]
-    const commandWithPaths = await crawlingCmds(categories)
+    const commandWithPaths = await _crawlingCmds(categories)
     const pass = commandWithPaths.length > 0
     return pass ? _(`\x1b[42m[PASS]\x1b[0m ${TEST_CASE}`) : _(`\x1b[41m[FAIL]\x1b[0m ${TEST_CASE}`)
   } catch (err) {

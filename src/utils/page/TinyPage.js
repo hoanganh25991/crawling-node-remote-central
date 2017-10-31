@@ -48,16 +48,20 @@ let browser = null
  */
 const TinyPage = async (option = {}) => {
   const mergedOption = Object.assign({}, config, option)
-
   if (!browser) browser = await puppeteer.launch(mergedOption)
-
   const tinyPage = await compose(addPageRunFunction, ignoreImgRequest, openDefaultPage)
-
   return await tinyPage(browser)
 }
 
 TinyPage.closeBrowser = async () => {
   if (browser) await browser.close()
+}
+
+TinyPage.injectBrowser = _browser => (browser = _browser)
+
+TinyPage.initBrowser = async (option = {}) => {
+  const mergedOption = Object.assign({}, config, option)
+  browser = await puppeteer.launch(mergedOption)
 }
 
 export default TinyPage

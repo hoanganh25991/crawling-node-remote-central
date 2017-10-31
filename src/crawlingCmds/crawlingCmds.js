@@ -2,6 +2,7 @@ import redo from "../utils/redo"
 import chunk from "lodash.chunk"
 // const updateToFirebase = require("../utils/firebase/updateToFirebase")
 import readDescription from "../utils/page/readDescription"
+import TinyPage from "../utils/page/TinyPage"
 
 const getCommandsDes = url => {
   return [
@@ -114,6 +115,9 @@ const firebaseKey = str => str.replace(/[.#$/[\]]/, "")
 const CrawlingCommadsWithPath = (getState, describe) => async categories => {
   describe({ type: "LOG", msg: `\x1b[36m<<< CRAWLING COMMANDS >>>\x1b[0m` })
   describe({ type: "LOG", msg: `Build url with path from categories input` })
+
+  // Share single browser
+  await TinyPage.initBrowser()
 
   // When category go deep into sub category, need store this path
   // Then commands can reuse this path to tell where they belongs to
