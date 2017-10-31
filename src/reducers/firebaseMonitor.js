@@ -2,16 +2,19 @@ import primitiveUpdateToFirebase from "../utils/firebase/primitiveUpdateToFireba
 
 let lastPush = Promise.resolve()
 
+export const iniState = {
+  mainBranch: "tmp",
+  objXBranch: "logMsgs"
+}
+
 export const firebaseMonitor = (getState, store) => {
   const customDispatch = action => action && action.msg && console.log(action.msg)
   const _primitiveUpdateToFB = primitiveUpdateToFirebase(() => ({}), customDispatch)
 
   const pushToFirebase = async logMsg => {
     await lastPush
-    const mainBranch = "tmp"
-    const objXBranch = "logMsgs"
-    const objXIndexKey = "msg"
-    return _primitiveUpdateToFB(mainBranch, objXBranch, objXIndexKey)([logMsg])
+    const { mainBranch, objXBranch } = iniState
+    return _primitiveUpdateToFB(mainBranch, objXBranch)([logMsg])
   }
 
   let lastLogState = null
@@ -33,9 +36,16 @@ export const firebaseMonitor = (getState, store) => {
 
 firebaseMonitor.waitForLastPush = async () => {
   await lastPush
-  await primitiveUpdateToFirebase.close()
 }
 
 firebaseMonitor.push = firebaseMonitor.waitForLastPush
+
+firebaseMonitor.cleanLog = async () => {
+  const db = primitiveUpdateToFirebase.db()
+  const { mainBranch, objXBranch } = iniState
+  const refToLog = db.ref(`${mainBranch}/${objXBranch}`)
+  await refToLog.remove()
+  await primitiveUpdateToFirebase.close()
+}
 
 export default firebaseMonitor
