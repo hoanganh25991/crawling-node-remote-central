@@ -4,7 +4,8 @@ import { logReducers, LogToConsole } from "../../reducers/logReducers"
 ;(async () => {
   const store = createStore(combineReducers({ logState: logReducers }))
   const getState = () => ({})
-  const _updateToFirebase = primitiveUpdateToFirebase(getState, store.dispatch)
+  const describe = store.dispatch
+  const _updateToFirebase = primitiveUpdateToFirebase(getState, describe)
 
   LogToConsole(store)
 
@@ -17,29 +18,23 @@ import { logReducers, LogToConsole } from "../../reducers/logReducers"
     const now = new Date().getTime()
     const msg = [now]
 
-    const key = await _updateToFirebase(mainBranch, objXBranch)(msg)
+    const storeKeys = await _updateToFirebase(mainBranch, objXBranch)(msg)
 
-    const refToObjXBranch = db.ref(`${mainBranch}/${objXBranch}/${key}`)
+    // describe({type: "LOG", msg: `Store keys: ${JSON.stringify(storeKeys, null, 2)}`})
+
+    const refToObjXBranch = db.ref(`${mainBranch}/${objXBranch}/${storeKeys}`)
     const fbVal = await new Promise(resolve => {
       refToObjXBranch.once("value", function(snapshot) {
         resolve(snapshot.val())
       })
     })
 
-    console.log(fbVal)
+    describe({ type: "LOG", msg: `Firebase val: ${fbVal}` })
 
-    // Firebase return snapshot as obj shape:
-    /*
-    {
-      "KWIJHUHJK": {
-        title: "xxx",
-        content: "xxx"
-      }
-    }
-     */
+    // Firebase snapshot val as primitive: "156897145"
 
     // Self clean up
-    await db.ref(`${mainBranch}/${objXBranch}/${key}`).remove()
+    await db.ref(`${mainBranch}/${objXBranch}/${storeKeys}`).remove()
 
     const pass = fbVal === now
     return pass ? _(`\x1b[42m[PASS]\x1b[0m ${TEST_CASE}`) : _(`\x1b[41m[FAIL]\x1b[0m ${TEST_CASE}`)

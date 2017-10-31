@@ -20,10 +20,11 @@ const updateObjX = (getState, describe) => (mainBranch, objXBranch) => async pri
 }
 
 const updateManyObjXs = (getState, describe) => (mainBranch, objXBranch) => primitives => {
-  return primitives.reduce(async (carry, primitive) => {
-    await carry
-    return updateObjX(getState, describe)(mainBranch, objXBranch)(primitive)
-  }, Promise.resolve())
+  return Promise.all(
+    primitives.map(async primitive => {
+      return await updateObjX(getState, describe)(mainBranch, objXBranch)(primitive)
+    }, Promise.resolve())
+  )
 }
 
 export default updateManyObjXs
