@@ -1,15 +1,15 @@
 const admin = require("firebase-admin")
 const serviceAccount = require("./firebase.config.json")
-const thisApp = admin.initializeApp(
+export const thisApp = admin.initializeApp(
   {
     credential: admin.credential.cert(serviceAccount),
     databaseURL: "https://glass-turbine-148103.firebaseio.com/"
   },
-  "firebase"
+  "updateToFirebase"
 )
-const db = thisApp.database()
+export const db = thisApp.database()
 
-const updateObjX = (mainBranch, objXBranch, objXIndexKey = "id") => async objX => {
+const updateObjX = (getState, describe) => (mainBranch, objXBranch, objXIndexKey = "id") => async objX => {
   // Find if post exist
   const { [objXIndexKey]: id } = objX
   const refToObjXBranch = db.ref(`${mainBranch}/${objXBranch}`)
@@ -24,17 +24,17 @@ const updateObjX = (mainBranch, objXBranch, objXIndexKey = "id") => async objX =
   })
 
   const objXKey = sameObjX ? Object.keys(sameObjX)[0] : refToObjXBranch.push().key
-  // logDebug(lx)(`Saving store...`)
-  // logDebug(lx)(`ObjX ${objXIndexKey} : ${id}`)
-  // logDebug(lx)(`ObjX key: ${objXKey}`)
+  describe({ type: "LOG", msg: `Saving store...` })
+  describe({ type: "LOG", msg: `ObjX ${objXIndexKey} : ${id}` })
+  describe({ type: "LOG", msg: `ObjX key: ${objXKey}` })
   await db.ref(`${mainBranch}/${objXBranch}/${objXKey}`).update(objX)
 }
 
-const updateManyObjXs = (mainBranch, objXBranch, objXIndexKey) => objXs => {
+const updateManyObjXs = (getState, describe) => (mainBranch, objXBranch, objXIndexKey) => objXs => {
   return objXs.reduce(async (carry, objX) => {
     await carry
-    return updateObjX(mainBranch, objXBranch, objXIndexKey)(objX)
-  }, 123)
+    return updateObjX(getState, describe)(mainBranch, objXBranch, objXIndexKey)(objX)
+  }, Promise.resolve())
 }
 
-module.exports = updateManyObjXs
+export default updateManyObjXs

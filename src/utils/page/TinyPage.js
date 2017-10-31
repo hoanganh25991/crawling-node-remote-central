@@ -46,7 +46,7 @@ let browser = null
  * @returns {Promise.<*>}
  * @constructor
  */
-const TinyPage = async (option = {}) => {
+export const TinyPage = async (option = {}) => {
   const mergedOption = Object.assign({}, config, option)
   if (!browser) browser = await puppeteer.launch(mergedOption)
   const tinyPage = await compose(addPageRunFunction, ignoreImgRequest, openDefaultPage)
