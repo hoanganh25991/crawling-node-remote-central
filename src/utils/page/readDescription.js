@@ -1,5 +1,5 @@
 import TinyPage from "./TinyPage"
-const screenshotDir = "screenshot"
+const screenshotDir = "./screenshot"
 const quality = 10
 
 const samplePageAction = {
@@ -23,21 +23,26 @@ export const getPageActionName = pageAction => {
   return pageActionName
 }
 
-export const queuePageActions = dispatch => async (page, lastResult, pageActions) => {
-  return await pageActions.reduce(async (carry, pageAction) => {
+export const queuePageActions = (getState, dispatch) => async (page, lastResult, pageActions) => {
+  dispatch({ type: "INCREASE_LOG_LEVEL" })
+  const xxx = await pageActions.reduce(async (carry, pageAction) => {
     const lastResult = await carry
-    return runPageAction(dispatch)(page, lastResult, pageAction)
+    return runPageAction(getState, dispatch)(page, lastResult, pageAction)
   }, Promise.resolve(lastResult))
+  dispatch({ type: "DECREASE_LOG_LEVEL" })
+  return xxx
 }
 
-export const runPageAction = dispatch => async (page, lastReturn, pageAction) => {
-  dispatch({ type: "LOG", msg: "Running page action" })
+export const runPageAction = (getState, dispatch) => async (page, lastReturn, pageAction) => {
   const { title, actions: pageActions } = pageAction
+  dispatch({ type: "LOG", msg: title })
 
   // Has child actions, self call to callApiUrl it
   const hasChildActions = Boolean(pageActions)
 
-  if (hasChildActions) return await queuePageActions(page, lastReturn, pageActions)
+  if (hasChildActions) {
+    return await queuePageActions(getState, dispatch)(page, lastReturn, pageActions)
+  }
 
   // Run page action
   const actionName = getPageActionName(pageAction)
@@ -45,7 +50,6 @@ export const runPageAction = dispatch => async (page, lastReturn, pageAction) =>
   const args = Array.isArray(params) ? params : [params]
 
   try {
-    dispatch({ type: "LOG", msg: `Page run ${actionName}` })
     const result = await page[actionName](...args)
 
     // Should take screenshot
@@ -68,11 +72,11 @@ export const runPageAction = dispatch => async (page, lastReturn, pageAction) =>
   }
 }
 
-const readDescription = dispatch => async description => {
+const readDescription = (getState, dispatch) => async description => {
   dispatch({ type: "LOG", msg: "Reading description" })
   const page = await TinyPage()
   const pageActions = [...description]
-  const storeReturn = await queuePageActions(dispatch)(page, {}, pageActions)
+  const storeReturn = await queuePageActions(getState, dispatch)(page, {}, pageActions)
   await page.close()
   dispatch({ type: "LOG", msg: "Crawling done" })
   return storeReturn
@@ -88,10 +92,10 @@ export const reducers = (state = iniState, action) => {
   const { type, ...others } = action
   switch (type) {
     case "LOG": {
-      return Object.assign({}, state, { log: others })
+      return Object.assign({}, state, others)
     }
     case "LOG_ERROR": {
-      return Object.assign({}, state, { logErr: others })
+      return Object.assign({}, state, others)
     }
     default: {
       return state
