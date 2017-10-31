@@ -1,6 +1,6 @@
-const { redo } = require("../utils/redo")
-const chunk = require("lodash.chunk")
-const updateToFirebase = require("../utils/firebase/updateToFirebase")
+import redo from "../utils/redo"
+import chunk from "lodash.chunk"
+// const updateToFirebase = require("../utils/firebase/updateToFirebase")
 import readDescription from "../utils/page/readDescription"
 
 const getCommandsDes = url => {
@@ -52,10 +52,10 @@ const getCommandsDes = url => {
  * Xu ly vu command co path
  */
 
-const buildUrlWithPath = (path, cates) => {
-  let store = []
+const urlWithPath = (path, cates) => {
+  let storeReturn = []
 
-  const go = store => path => cates => {
+  const run = (storeReturn, path, cates) => {
     const shouldBreak = !cates || cates.length === 0
 
     if (shouldBreak) {
@@ -64,27 +64,28 @@ const buildUrlWithPath = (path, cates) => {
 
     cates.map(cate => {
       const nextPath = [...path, cate]
-      // console.log("Push nextPath", nextPath)
 
+      // Only consider to push path, when cate doesnt have sub
+      // Bcs structure of page duplicate info in parent's commands & child's commands
+      // console.log("Push nextPath", nextPath)
       if (!cate.sub || cate.sub.length === 0) {
-        store.push(nextPath)
+        storeReturn.push(nextPath)
       }
 
-      go(store)(nextPath)(cate.sub)
+      run(storeReturn, nextPath, cate.sub)
     })
   }
 
-  go(store)(path)(cates)
+  run(storeReturn, path, cates)
 
-  return store
+  return storeReturn
 }
 
-const firebaseKey = str => str.replace(/[.#$/[\]]/, "")
+const findCommands = (getState, describe) => async startUrl => {
+  // describe({type: "LOG", msg: `Find commands at url: ${startUrl}`})
 
-const finxCommands = async startUrl => {
   const loop = async (redoCount, lastResult, finish) => {
     const firstRun = redoCount === 0
-
     lastResult = firstRun ? {} : lastResult
     const runUrl = firstRun ? startUrl : lastResult.url
 
@@ -93,7 +94,11 @@ const finxCommands = async startUrl => {
       return lastResult
     }
 
-    const { crawledCommands } = await readDescription(getCommandsDes(runUrl))
+    if (!firstRun) {
+      describe({ type: "LOG", msg: `Find commands on 'next-page': ${runUrl}`, level: 1 })
+    }
+
+    const { crawledCommands } = await readDescription(getState, describe)(getCommandsDes(runUrl))
     const { commands: nextCommands, url } = crawledCommands
     const { commands: lasCommands = [] } = lastResult
     const commands = [...lasCommands, ...nextCommands]
@@ -104,47 +109,45 @@ const finxCommands = async startUrl => {
   return commands
 }
 
-const kiemCommandsLuuThemPath = async categories => {
-  const allPathToCommands = buildUrlWithPath([], categories)
+const firebaseKey = str => str.replace(/[.#$/[\]]/, "")
 
-  const chunks = chunk(allPathToCommands, 5)
+const CrawlingCommadsWithPath = (getState, describe) => async categories => {
+  describe({ type: "LOG", msg: `\x1b[36m<<< CRAWLING COMMANDS >>>\x1b[0m` })
+  describe({ type: "LOG", msg: `Build url with path from categories input` })
+
+  // When category go deep into sub category, need store this path
+  // Then commands can reuse this path to tell where they belongs to
+  const urlToCommandsList = urlWithPath([], categories)
+
+  describe({ type: "LOG", msg: `Open ${5} pages at same time to crawl` })
+
+  const chunks = chunk(urlToCommandsList, 5)
+  let storeCommands = []
 
   await chunks.reduce(async (carry, chunk) => {
     await carry
     return Promise.all(
       chunk.map(async commandPath => {
         const lastPath = commandPath[commandPath.length - 1]
-        const url = lastPath.url
-        const commands = await finxCommands(url)
+        const { url } = lastPath
+        const commands = await findCommands(getState, describe)(url)
 
         const flatPath = commandPath.reduce((carry, cate, index) => {
           const key = firebaseKey(cate.title)
-          return Object.assign(carry, { [key]: index })
+          return { ...carry, [key]: index }
         }, {})
 
-        const commandWithPaths = commands.map(command => Object.assign({}, command, { path: flatPath }))
-        console.log("\x1b[36m%s\x1b[0m", `Saving ${commandWithPaths.length} commands to firebase`)
-        console.log(`First one: `, commandWithPaths[0])
-        await updateToFirebase("nodeRemoteCentral")("commands")("title")(commandWithPaths)
+        const commandWithPaths = commands.map(command => ({ ...command, path: flatPath }))
+        storeCommands = [...storeCommands, ...commandWithPaths]
+
+        describe({ type: "LOG", msg: `\x1b[36mFound ${commandWithPaths.length} commands\x1b[0m` })
+        describe({ type: "LOG", msg: `First one: ${JSON.stringify(commands[0], null, 2)}` })
+        // await updateToFirebase("nodeRemoteCentral")("commands")("title")(commandWithPaths)
       })
     )
-  }, console.log("\x1b[36m%s\x1b[0m", `Total chunks: ${chunks.length}`))
+  }, describe({ type: "LOG", msg: `\x1b[36mTotal queue 'Open page': ${chunks.length}\x1b[0m` }))
+
+  return storeCommands
 }
 
-const crawlingCmds = async () => {
-  const categories = await crawlingCategories()
-  await kiemCommandsLuuThemPath(categories)
-  // const buildSearch = require("./firebase/firebaseSupportSearch")
-  // await buildSearch()
-}
-;(async () => {
-  try {
-    await crawlingCmds()
-  } catch (err) {
-    console.log(err)
-  } finally {
-    process.exit()
-  }
-})()
-
-module.exports = crawlingCmds
+export default CrawlingCommadsWithPath

@@ -11,4 +11,4 @@ const redo = async callback => {
   return lastResult
 }
 
-module.exports = redo
+export default redo
