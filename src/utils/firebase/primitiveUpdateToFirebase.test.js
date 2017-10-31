@@ -39,7 +39,7 @@ import { logReducers, LogToConsole } from "../../reducers/logReducers"
      */
 
     // Self clean up
-    // await db.ref(`${mainBranch}/${objXBranch}/${key}`).remove()
+    await db.ref(`${mainBranch}/${objXBranch}/${key}`).remove()
 
     const pass = fbVal === now
     return pass ? _(`\x1b[42m[PASS]\x1b[0m ${TEST_CASE}`) : _(`\x1b[41m[FAIL]\x1b[0m ${TEST_CASE}`)
