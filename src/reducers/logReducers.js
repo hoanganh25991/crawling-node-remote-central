@@ -1,10 +1,9 @@
 export const logReducers = (state = { msg: "", level: 0 }, action) => {
-  const { type } = action
+  const { type, ...others } = action
   switch (type) {
     case "LOG":
     case "LOG_MSG": {
-      const { msg } = action
-      return { ...state, msg }
+      return { ...state, ...others }
     }
     case "INCREASE_LOG_LEVEL": {
       const { level = 0 } = state

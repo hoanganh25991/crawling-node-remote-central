@@ -24,24 +24,23 @@ export const getPageActionName = pageAction => {
 }
 
 export const queuePageActions = (getState, dispatch) => async (page, lastResult, pageActions) => {
-  dispatch({ type: "INCREASE_LOG_LEVEL" })
-  const xxx = await pageActions.reduce(async (carry, pageAction) => {
+  return await pageActions.reduce(async (carry, pageAction) => {
     const lastResult = await carry
     return runPageAction(getState, dispatch)(page, lastResult, pageAction)
   }, Promise.resolve(lastResult))
-  dispatch({ type: "DECREASE_LOG_LEVEL" })
-  return xxx
 }
 
-export const runPageAction = (getState, dispatch) => async (page, lastReturn, pageAction) => {
+export const runPageAction = (getState, describe) => async (page, lastReturn, pageAction) => {
+  const { level } = getState()
   const { title, actions: pageActions } = pageAction
-  dispatch({ type: "LOG", msg: title })
+
+  describe({ type: "LOG", msg: title, level })
 
   // Has child actions, self call to callApiUrl it
   const hasChildActions = Boolean(pageActions)
 
   if (hasChildActions) {
-    return await queuePageActions(getState, dispatch)(page, lastReturn, pageActions)
+    return await queuePageActions(() => ({ level: 1 }), describe)(page, lastReturn, pageActions)
   }
 
   // Run page action
@@ -67,20 +66,21 @@ export const runPageAction = (getState, dispatch) => async (page, lastReturn, pa
     // Merge return
     return Object.assign(lastReturn, actionReturn)
   } catch (err) {
-    dispatch({ type: "LOG_ERROR", err })
+    describe({ type: "LOG_ERROR", err })
     return lastReturn
   }
 }
 
-const readDescription = (getState, dispatch) => async description => {
-  dispatch({ type: "LOG", msg: "Reading description" })
-  dispatch({ type: "DECREASE_LOG_LEVEL" })
+const readDescription = (getState, describe) => async description => {
+  describe({ type: "LOG", msg: "Reading description" })
+
   const page = await TinyPage()
   const pageActions = [...description]
-  const storeReturn = await queuePageActions(getState, dispatch)(page, {}, pageActions)
+  const storeReturn = await queuePageActions(() => ({ level: 0 }), describe)(page, {}, pageActions)
   await page.close()
-  dispatch({ type: "INCREASE_LOG_LEVEL" })
-  dispatch({ type: "LOG", msg: "Crawling done" })
+
+  describe({ type: "LOG", msg: "Crawling done" })
+
   return storeReturn
 }
 
