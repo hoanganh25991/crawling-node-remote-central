@@ -107,7 +107,9 @@ const CrawlingCommadsWithPath = (getState, describe) => async categories => {
   describe({ type: "LOG", msg: `\x1b[36m<<< CRAWLING COMMANDS >>>\x1b[0m` })
   describe({ type: "LOG", msg: `Build url with path from categories input` })
   // Share single browser
-  await TinyPage.initBrowser()
+  // Dont have to run this one,
+  // NOW TinyPage can hanlde multi-thread ask for browser
+  // await TinyPage.initBrowser()
   // When category go deep into sub category, need store this path
   // Then commands can reuse this path to tell where they belongs to
   // Ex: commands obj

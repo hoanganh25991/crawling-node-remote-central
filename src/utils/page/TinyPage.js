@@ -43,7 +43,6 @@ let firstRun = true
 let browserPromise = null
 const initBrowser = mergedOption => {
   if (!firstRun && browserPromise) {
-    console.log("Not first run")
     return browserPromise
   }
 
