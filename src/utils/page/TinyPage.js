@@ -55,6 +55,7 @@ const TinyPage = async (option = {}) => {
 
 TinyPage.closeBrowser = async () => {
   if (browser) await browser.close()
+  browser = null
 }
 
 TinyPage.injectBrowser = _browser => (browser = _browser)

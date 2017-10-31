@@ -44,15 +44,6 @@ const getCommandsDes = url => {
   ]
 }
 
-/**
- * Code kiem link luon het cai interface
- * @returns {Promise.<void>}
- */
-
-/**
- * Xu ly vu command co path
- */
-
 const urlWithPath = (path, cates) => {
   let storeReturn = []
 
@@ -115,12 +106,22 @@ const firebaseKey = str => str.replace(/[.#$/[\]]/, "")
 const CrawlingCommadsWithPath = (getState, describe) => async categories => {
   describe({ type: "LOG", msg: `\x1b[36m<<< CRAWLING COMMANDS >>>\x1b[0m` })
   describe({ type: "LOG", msg: `Build url with path from categories input` })
-
   // Share single browser
   await TinyPage.initBrowser()
-
   // When category go deep into sub category, need store this path
   // Then commands can reuse this path to tell where they belongs to
+  // Ex: commands obj
+  /*
+  {
+    title: "Apple Remote -",
+    command: "0009 9998 ...",
+    notes: "",
+    path: {
+      "Apple": 0,
+      "Remote": 1 //Path to cate
+    }
+  }
+   */
   const urlToCommandsList = urlWithPath([], categories)
 
   describe({ type: "LOG", msg: `Open ${5} pages at same time to crawl` })

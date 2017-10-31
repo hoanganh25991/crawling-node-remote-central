@@ -60,7 +60,7 @@ const getLinksDes = (url, level) => {
 }
 
 const CrawlingCategories = (getState, describe) => async url => {
-  describe({ type: "LOG", msg: `Find categories in home page` })
+  describe({ type: "LOG", msg: `<<< CRAWLING CATEGORIES >>>` })
 
   const readDescription = _readDescription(() => {}, describe)
 
