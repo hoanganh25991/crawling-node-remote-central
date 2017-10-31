@@ -1,13 +1,18 @@
 import readDescription from "./readDescription"
 import { combineReducers, createStore } from "redux"
-
-import { iniState as readState, reducers as readReducers } from "./readDescription"
+import { reducers as readDescriptionReducers } from "./readDescription"
 ;(async () => {
-  const reducers = combineReducers({ readState: readReducers })
-  const store = createStore(reducers)
+  const store = createStore(combineReducers({ readState: readDescriptionReducers }))
   const _readDescription = readDescription(store.dispatch)
 
-  store.subscribe(() => console.log(store.getState().readState.log.msg))
+  store.subscribe(() => {
+    const state = store.getState()
+    const msg = state.readState && state.readState.log && state.readState.log.msg
+    console.log(msg)
+  })
+
+  const TEST_CASE = `Read description`
+  const _ = console.log
 
   try {
     const crawlingTitle = [
@@ -25,13 +30,14 @@ import { iniState as readState, reducers as readReducers } from "./readDescripti
     ]
 
     const crawlingReturn = await _readDescription(crawlingTitle)
-
     const { pageTitle } = crawlingReturn
     const pass = pageTitle === "Google"
 
-    if (!pass) return console.log(`\x1b[41m[FAIL]\x1b[0m Read description fail!`)
-
-    return console.log(`\x1b[42m[PASS]\x1b[0m Read description`)
+    if (!pass) {
+      return _(`\x1b[41m[FAIL]\x1b[0m ${TEST_CASE}`)
+    } else {
+      return _(`\x1b[42m[PASS]\x1b[0m ${TEST_CASE}`)
+    }
   } catch (err) {
     console.log(err)
   } finally {
