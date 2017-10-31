@@ -74,10 +74,12 @@ export const runPageAction = (getState, dispatch) => async (page, lastReturn, pa
 
 const readDescription = (getState, dispatch) => async description => {
   dispatch({ type: "LOG", msg: "Reading description" })
+  dispatch({ type: "DECREASE_LOG_LEVEL" })
   const page = await TinyPage()
   const pageActions = [...description]
   const storeReturn = await queuePageActions(getState, dispatch)(page, {}, pageActions)
   await page.close()
+  dispatch({ type: "INCREASE_LOG_LEVEL" })
   dispatch({ type: "LOG", msg: "Crawling done" })
   return storeReturn
 }
