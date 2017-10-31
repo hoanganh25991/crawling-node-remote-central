@@ -60,12 +60,20 @@ const runTest = async _path => {
 
   const listInPath = fs.readdirSync(path)
 
-  await Promise.all(
-    listInPath.map(async file => {
-      const currPath = `${path}/${file}`
-      await runTest(currPath)
-    })
-  )
+  // await Promise.all(
+  //   listInPath.map(async file => {
+  //     const currPath = `${path}/${file}`
+  //     await runTest(currPath)
+  //   })
+  // )
+
+  // Run single test at time
+  // Parallel all of them >>> nearly killing my machine
+  await listInPath.reduce(async (carry, file) => {
+    await carry
+    const currPath = `${path}/${file}`
+    return runTest(currPath)
+  }, Promise.resolve())
 }
 ;(async () => {
   const args = process.argv.slice(2)
