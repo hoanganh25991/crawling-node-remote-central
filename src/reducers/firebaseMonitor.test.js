@@ -13,10 +13,16 @@ import { logReducers, LogToConsole } from "../reducers/logReducers"
   const _ = console.log
 
   try {
-    describe({ type: "LOG", msg: `This is test log` })
-    describe({ type: "LOG", msg: `This is test log` })
-    describe({ type: "LOG", msg: `This is test log` })
+    describe({ type: "LOG", msg: `This is test log at ${new Date().getTime()}` })
+    describe({ type: "LOG", msg: `This is test log at ${new Date().getTime()}` })
+    describe({ type: "LOG", msg: `This is test log at ${new Date().getTime()}` })
+
     await firebaseMonitor.waitForLastPush()
+
+    // await new Promise(resolve => setTimeout(async () => {
+    //   await firebaseMonitor.waitForLastPush()
+    //   resolve()
+    // }, 2000))
 
     const pass = true
     return pass ? _(`\x1b[42m[PASS]\x1b[0m ${TEST_CASE}`) : _(`\x1b[41m[FAIL]\x1b[0m ${TEST_CASE}`)

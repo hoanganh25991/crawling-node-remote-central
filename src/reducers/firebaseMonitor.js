@@ -1,22 +1,22 @@
-import updateToFirebase from "../utils/firebase/updateToFirebase"
+import primitiveUpdateToFirebase from "../utils/firebase/primitiveUpdateToFirebase"
 
-const firebaseMonitor = (getState, dispatch) => {}
+let lastPush = Promise.resolve()
 
-const temp = (getState, store) => {
-  const _updateToFirebase = updateToFirebase(() => ({}), store.dispatch)
+export const firebaseMonitor = (getState, store) => {
+  const customDispatch = action => action && action.msg && console.log(action.msg)
+  const _primitiveUpdateToFB = primitiveUpdateToFirebase(() => ({}), customDispatch)
 
-  let lastPush = Promise.resolve()
   const pushToFirebase = async logMsg => {
     await lastPush
     const mainBranch = "tmp"
     const objXBranch = "logMsgs"
     const objXIndexKey = "msg"
-    lastPush = _updateToFirebase(mainBranch, objXBranch, objXIndexKey)([logMsg])
+    return _primitiveUpdateToFB(mainBranch, objXBranch, objXIndexKey)([logMsg])
   }
 
   let lastLogState = null
   store.subscribe(() => {
-    const { logState } = getState(store.getState())
+    const logState = getState(store.getState())
     const shouldLog = !lastLogState || lastLogState.msg !== logState.msg
 
     if (shouldLog) {
@@ -26,7 +26,16 @@ const temp = (getState, store) => {
       const paddingLength = level * 2 + 1
       const padding = paddingLength >= 0 ? new Array(paddingLength).join(" ") : ""
       const paddingWithRootSlash = level > 0 ? `${padding}\\__` : padding
-      pushToFirebase(`${paddingWithRootSlash} ${msg}`)
+      lastPush = pushToFirebase(`${paddingWithRootSlash} ${msg}`)
     }
   })
 }
+
+firebaseMonitor.waitForLastPush = async () => {
+  await lastPush
+  await primitiveUpdateToFirebase.close()
+}
+
+firebaseMonitor.push = firebaseMonitor.waitForLastPush
+
+export default firebaseMonitor
