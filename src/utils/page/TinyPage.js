@@ -62,7 +62,7 @@ TinyPage.injectBrowser = _browser => (browser = _browser)
 
 TinyPage.initBrowser = async (option = {}) => {
   const mergedOption = Object.assign({}, config, option)
-  browser = await puppeteer.launch(mergedOption)
+  if (!browser) browser = await puppeteer.launch(mergedOption)
 }
 
 export default TinyPage
