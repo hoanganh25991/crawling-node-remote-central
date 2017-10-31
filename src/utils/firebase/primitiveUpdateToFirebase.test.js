@@ -1,4 +1,4 @@
-import primitiveUpdateToFirebase, { db, thisApp as firebaseApp } from "./primitiveUpdateToFirebase"
+import primitiveUpdateToFirebase from "./primitiveUpdateToFirebase"
 import { combineReducers, createStore } from "redux"
 import { logReducers, LogToConsole } from "../../reducers/logReducers"
 ;(async () => {
@@ -21,7 +21,7 @@ import { logReducers, LogToConsole } from "../../reducers/logReducers"
     const storeKeys = await _updateToFirebase(mainBranch, objXBranch)(msg)
 
     // describe({type: "LOG", msg: `Store keys: ${JSON.stringify(storeKeys, null, 2)}`})
-
+    const db = primitiveUpdateToFirebase.db()
     const refToObjXBranch = db.ref(`${mainBranch}/${objXBranch}/${storeKeys}`)
     const fbVal = await new Promise(resolve => {
       refToObjXBranch.once("value", function(snapshot) {
@@ -43,6 +43,7 @@ import { logReducers, LogToConsole } from "../../reducers/logReducers"
     return _(`\x1b[41m[FAIL]\x1b[0m ${TEST_CASE}`)
   } finally {
     // Clean up
-    await firebaseApp.delete()
+    // await firebaseApp.delete()
+    await primitiveUpdateToFirebase.close()
   }
 })()

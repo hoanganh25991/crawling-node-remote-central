@@ -27,4 +27,7 @@ const updateManyObjXs = (getState, describe) => (mainBranch, objXBranch) => prim
   )
 }
 
+updateManyObjXs.close = async () => await thisApp.delete()
+updateManyObjXs.db = () => db
+
 export default updateManyObjXs
