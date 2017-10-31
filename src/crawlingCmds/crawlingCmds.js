@@ -132,7 +132,7 @@ const kiemCommandsLuuThemPath = async categories => {
 }
 
 const crawlingCmds = async () => {
-  const categories = await buildCategoryWithSubList()
+  const categories = await crawlingCategories()
   await kiemCommandsLuuThemPath(categories)
   // const buildSearch = require("./firebase/firebaseSupportSearch")
   // await buildSearch()

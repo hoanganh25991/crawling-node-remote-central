@@ -1,7 +1,6 @@
-const { redo } = require("../utils/redo")
 const chunk = require("lodash.chunk")
-const updateToFirebase = require("../utils/firebase/updateToFirebase")
-import readDescription from "../utils/page/readDescription"
+// const updateToFirebase = require("../utils/firebase/updateToFirebase")
+import _readDescription from "../utils/page/readDescription"
 
 const getLinksDes = (url, level) => {
   return [
@@ -60,10 +59,19 @@ const getLinksDes = (url, level) => {
   ]
 }
 
-const buildCategoryWithSubList = async url => {
+const crawlingCategories = (getState, describe) => async url => {
+  describe({ type: "LOG", msg: `Find categories in home page` })
+
+  const readDescription = _readDescription(() => {}, describe)
+
   const level = 0
   const crawlingResult = await readDescription(getLinksDes(url, level))
   let { crawledCategories: categories } = crawlingResult
+
+  describe({ type: "LOG", msg: `Found ${categories.length} categories in home page` })
+
+  describe({ type: "LOG", msg: `Go deep into category's url to find sub category` })
+  describe({ type: "LOG", msg: `Open ${5} pages at same time` })
 
   const chunks = chunk(categories, 5)
   const nextLevel = level + 1
@@ -74,14 +82,14 @@ const buildCategoryWithSubList = async url => {
       chunk.map(async cate => {
         const crawlingResult = await readDescription(getLinksDes(cate.url, nextLevel))
         const { crawledCategories: subCates } = crawlingResult
-        console.log(`\x1b[36m${subCates[0]}\x1b[0m`)
+        describe({ type: "LOG", msg: `\x1b[36m$[${cate.title}] Found ${subCates.length} sub categories\x1b[0m` })
         cate.sub = [...cate.sub, ...subCates]
       })
     )
-  }, console.log(`\x1b[36m%s\x1b[0m`, `Total chunks: ${chunks.length}`))
+  }, describe({ type: "LOG", msg: `\x1b[36mTotal queue 'open page': ${chunks.length}\x1b[0m` }))
 
   // await updateToFirebase("nodeRemoteCentral")("categories")("title")(categories)
   return categories
 }
 
-export default buildCategoryWithSubList
+export default crawlingCategories

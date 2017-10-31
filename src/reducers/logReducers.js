@@ -33,7 +33,8 @@ export const LogToConsole = store => {
       lastLogState = logState
       const msg = (logState && logState.msg) || ""
       const level = (logState && logState.level) || 0
-      const padding = new Array(level * 2 + 1).join(" ")
+      const paddingLength = level * 2 + 1
+      const padding = paddingLength >= 0 ? new Array(paddingLength).join(" ") : ""
       const paddingWithRootSlash = level > 0 ? `${padding}\\__` : padding
       console.log(`${paddingWithRootSlash} ${msg}`)
     }
