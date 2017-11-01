@@ -6,10 +6,11 @@ import iniDynamicApp from "../utils/firebase/iniDynamicApp"
  * @returns {*}
  */
 const iniState = {
-  totalCategories: null,
-  totalCommands: null,
+  totalCategories: 0,
+  totalCommands: 0,
   // lastCrawlingTime: null,
-  mainBranch: "tmp"
+  mainBranch: "tmp",
+  done: false
 }
 
 export const crawlingInfoReducers = (state = iniState, action) => {
@@ -29,7 +30,7 @@ export const crawlingInfoReducers = (state = iniState, action) => {
     }
     case "CRAWLING_TIME": {
       const { crawlingTime } = action
-      return { ...state, lastCrawlingTime: crawlingTime }
+      return { ...state, lastCrawlingTime: crawlingTime, done: true }
     }
     default: {
       return state

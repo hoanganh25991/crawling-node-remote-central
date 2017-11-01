@@ -22,6 +22,8 @@ import TrackTime from "../utils/trackTime"
     return { ...s.logState, silentConsoleLog: true }
   }
 
+  describe({ type: "@INIT_STATE" })
+
   firebaseCrawlingInfoMonitor(getFbCIState, store)
   firebaseMonitor(getFbState, store)
   LogToConsole(store)
@@ -38,7 +40,8 @@ import TrackTime from "../utils/trackTime"
     describe({ type: "CRAWLING_TIME", crawlingTime: t.diff() })
 
     const pass = commands.length > 0
-    _(`[RECHECK PASS] First command: ${JSON.stringify(commands[0], null, 2)}`)
+    _(`[RECHECK PASS] Total command: ${commands.length}`)
+    _(`[RECHECK PASS] First one: ${JSON.stringify(commands[0], null, 2)}`)
     return pass ? _(`\x1b[42m[PASS]\x1b[0m ${TEST_CASE}`) : _(`\x1b[41m[FAIL]\x1b[0m ${TEST_CASE}`)
   } catch (err) {
     _(err)
