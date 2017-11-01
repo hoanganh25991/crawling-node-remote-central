@@ -75,6 +75,7 @@ const CrawlingCategories = (getState, describe) => async url => {
   let { crawledCategories: categories } = crawlingResult
 
   describe({ type: "LOG", msg: `Found ${categories.length} categories in home page` })
+  describe({ type: "FIND_X_CATEGORIES", totalCategories: categories.length })
 
   describe({ type: "LOG", msg: `Go deep into category's url to find sub category` })
   describe({ type: "LOG", msg: `Open ${5} pages at same time` })
@@ -88,7 +89,10 @@ const CrawlingCategories = (getState, describe) => async url => {
       chunk.map(async cate => {
         const crawlingResult = await readDescription(getLinksDes(cate.url, nextLevel))
         const { crawledCategories: subCates } = crawlingResult
+
         describe({ type: "LOG", msg: `\x1b[36m[${cate.title}] Found ${subCates.length} sub categories\x1b[0m` })
+        describe({ type: "FIND_X_CATEGORIES", totalCategories: subCates.length })
+
         cate.sub = [...cate.sub, ...subCates]
       })
     )

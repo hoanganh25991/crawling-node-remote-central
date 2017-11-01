@@ -145,6 +145,8 @@ const CrawlingCommadsWithPath = (getState, describe) => async categories => {
         const { url } = lastPath
         const commands = await findCommands(getState, describe)(url)
 
+        describe({ type: "FIND_X_COMMANDS", totalCommands: commands.length })
+
         const flatPath = commandPath.reduce((carry, cate, index) => {
           const key = firebaseKey(cate.title)
           return { ...carry, [key]: index }
