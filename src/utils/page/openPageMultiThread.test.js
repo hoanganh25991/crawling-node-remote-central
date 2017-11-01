@@ -9,9 +9,6 @@ const timeOut = 6 * 1000
   const TEST_CASE = "Create tinyPage"
   const _ = console.log
 
-  const now = new Date().getTime()
-  console.time(`${TEST_CASE}${now}`)
-
   try {
     // await TinyPage.initBrowser()
 
