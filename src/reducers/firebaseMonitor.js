@@ -27,7 +27,7 @@ export const firebaseMonitor = (getState, store) => {
 
   let lastLogState = null
   store.subscribe(() => {
-    const logState = getState(store.getState())
+    const logState = getState()
     const shouldLog = !lastLogState || lastLogState.msg !== logState.msg
 
     if (shouldLog) {
