@@ -8,7 +8,12 @@ import customFirebase from "../utils/firebase/primitiveUpdateToFirebase"
   const store = createStore(combineReducers({ logState: logReducers }))
   const describe = store.dispatch
 
-  firebaseMonitor(s => s.logState, store)
+  const getFBState = () => {
+    const s = store.getState()
+    return { ...s.logState }
+  }
+
+  firebaseMonitor(getFBState, store)
   LogToConsole(store)
 
   const TEST_CASE = `Test firebase monitor`

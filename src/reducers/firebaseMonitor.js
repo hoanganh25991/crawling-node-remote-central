@@ -14,7 +14,9 @@ export const iniState = {
  * @param store
  */
 export const firebaseMonitor = (getState, store) => {
-  const customDispatch = action => action && action.msg && console.log(action.msg)
+  const { silentConsoleLog } = getState()
+  const consoleLog = action => action && action.msg && console.log(action.msg)
+  const customDispatch = silentConsoleLog ? () => null : consoleLog
   const _primitiveUpdateToFB = primitiveUpdateToFirebase(() => ({}), customDispatch)
 
   const pushToFirebase = async logMsg => {
@@ -47,6 +49,7 @@ firebaseMonitor.waitForLastPush = async () => {
 firebaseMonitor.push = firebaseMonitor.waitForLastPush
 
 firebaseMonitor.cleanLog = async () => {
+  await lastPush
   const db = primitiveUpdateToFirebase.db()
   const { mainBranch, objXBranch } = iniState
   const refToLog = db.ref(`${mainBranch}/${objXBranch}`)
