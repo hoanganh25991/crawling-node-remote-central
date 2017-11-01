@@ -75,6 +75,10 @@ firebaseCrawlingInfoMonitor.push = firebaseCrawlingInfoMonitor.waitForLastPush
 
 firebaseCrawlingInfoMonitor.cleanLog = async () => {
   await lastPush
+  // if (fbApp) {
+  //   console.log("[CLEAN LOG] Delete fbApp")
+  //   await fbApp.delete()
+  // }
   if (fbApp) await fbApp.delete()
 }
 
