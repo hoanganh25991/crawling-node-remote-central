@@ -8,7 +8,7 @@ import iniDynamicApp from "../utils/firebase/iniDynamicApp"
 const iniState = {
   totalCategories: null,
   totalCommands: null,
-  lastCrawlingTime: null,
+  // lastCrawlingTime: null,
   mainBranch: "tmp"
 }
 
