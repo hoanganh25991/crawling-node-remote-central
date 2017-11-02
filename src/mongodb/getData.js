@@ -15,4 +15,19 @@ export const getData = url => {
   )
 }
 
+export const deleteData = url => {
+  const options = {
+    method: "DELETE",
+    url,
+    headers: { "content-type": "application/json" }
+  }
+
+  return new Promise(resolve =>
+    request(options, function(error, response, body) {
+      if (error) throw new Error(error)
+      resolve(body)
+    })
+  )
+}
+
 export default getData
