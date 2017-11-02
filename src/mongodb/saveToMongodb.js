@@ -1,19 +1,19 @@
-var request = require("request")
+const request = require("request")
 
-var options = {
+const iniOption = {
   method: "POST",
-  url: "http://vagrant2.dev:3001/api/remotecategories",
   headers: { "content-type": "application/json" },
-  body: {
-    title: "Apple",
-    count: 7,
-    category_id: "59fb3a7907dfd0e723c54a0b"
-  },
   json: true
 }
 
-request(options, function(error, response, body) {
-  if (error) throw new Error(error)
+export const save = (objX, url) => {
+  const options = { ...iniOption, url, body: objX }
+  return new Promise(resolve =>
+    request(options, function(e, res, body) {
+      if (e) throw new Error(e)
+      resolve(body)
+    })
+  )
+}
 
-  console.log(body)
-})
+export default save
