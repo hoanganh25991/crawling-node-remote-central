@@ -1,4 +1,4 @@
-const { appId, apiKey } = require("./../.credential/onesignal.json")
+const { appId, apiKey } = require("./onesignal.config.json")
 
 const options = {
   host: "onesignal.com",
@@ -22,7 +22,7 @@ const data = {
  * @param messageObj
  * @returns {Promise}
  */
-const sendNotification = (content, messageObj = null) => {
+export const sendNotification = (content, messageObj = null) => {
   // Merge
   Object.assign(
     data,
@@ -40,4 +40,4 @@ const sendNotification = (content, messageObj = null) => {
   return waitReqFinish
 }
 
-module.exports = sendNotification
+export default sendNotification
