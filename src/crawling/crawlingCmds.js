@@ -4,7 +4,7 @@ import chunk from "lodash.chunk"
 import readDescription from "../utils/page/readDescription"
 import TinyPage from "../utils/page/TinyPage"
 
-const getCommandsDes = url => {
+export const getCommandsDes = url => {
   return [
     {
       title: `Go to url: ${url}`,
@@ -73,7 +73,7 @@ const urlWithPath = (path, cates) => {
   return storeReturn
 }
 
-const findCommands = (getState, describe) => async startUrl => {
+export const findCommands = (getState, describe) => async startUrl => {
   // describe({type: "LOG", msg: `Find commands at url: ${startUrl}`})
 
   const loop = async (redoCount, lastResult, finish) => {

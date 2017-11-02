@@ -6,7 +6,7 @@ const iniOption = {
   json: true
 }
 
-export const save = (objX, url) => {
+export const saveToMongodb = (objX, url) => {
   const options = { ...iniOption, url, body: objX }
   return new Promise(resolve =>
     request(options, function(e, res, body) {
@@ -16,4 +16,4 @@ export const save = (objX, url) => {
   )
 }
 
-export default save
+export default saveToMongodb
