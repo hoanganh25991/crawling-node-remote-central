@@ -12,7 +12,7 @@ const runAndSave = (getState, describe) => (parentCateId, categories) => {
 
   describe({ type: "LOG", msg: `Open ${5} pages at same time to crawl` })
 
-  const chunks = chunk(categories, 5)
+  const chunks = chunk(categories, 2)
 
   return chunks.reduce(async (carry, categories) => {
     await carry
@@ -28,7 +28,18 @@ const runAndSave = (getState, describe) => (parentCateId, categories) => {
         // Find and save commands
         const commands = await _findCommands(cate.url)
         const commandWithCateIds = commands.map(command => ({ ...command, category_id: savedCate._id }))
-        return commandWithCateIds.map(async objX => await saveToMongodb(objX, mongoComUrl))
+        return await commandWithCateIds.reduce(async (carry, objX, index) => {
+          try {
+            await carry
+          } catch (err) {
+            const pending = 20
+            console.log(`Retry save, pending... ${pending}s`)
+            await new Promise(resolve => setTimeout(resolve, pending * 1000))
+            const lastObjX = commandWithCateIds[index - 1]
+            await saveToMongodb(lastObjX, mongoComUrl)
+          }
+          return saveToMongodb(objX, mongoComUrl)
+        }, describe({ type: "LOG", msg: `Saving ${commandWithCateIds.length} commands` }))
       })
     )
   }, describe({ type: "LOG", msg: `\x1b[36mTotal queue 'Open page': ${chunks.length}\x1b[0m` }))
