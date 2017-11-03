@@ -18,16 +18,19 @@ import sendNotification from "../utils/sendNotification"
   const TEST_CASE = "Crawling V2"
   const _ = console.log
   let pass = true
+  let countFail = 0
 
   try {
-    pass = await _index()
+    countFail = await _index()
+    _(`\x1b[36mTotal fail: ${countFail}`)
+    pass = countFail === 0
   } catch (err) {
     _(err)
     pass = false
   } finally {
     const msg = pass ? `\x1b[42m[PASS]\x1b[0m ${TEST_CASE}` : `\x1b[41m[FAIL]\x1b[0m ${TEST_CASE}`
     await TinyPage.closeBrowser()
-    await sendNotification(msg)
+    await sendNotification(msg + `. Total fail: ${countFail}`)
     t.end()
     _(msg)
   }

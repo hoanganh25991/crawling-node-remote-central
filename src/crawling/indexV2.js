@@ -14,7 +14,9 @@ const runAndSave = (getState, describe) => (parentCateId, categories) => {
 
   const chunks = chunk(categories, 2)
 
-  return chunks.reduce(async (carry, categories) => {
+  let countFail = 0
+
+  const wait = chunks.reduce(async (carry, categories) => {
     await carry
     return Promise.all(
       categories.map(async cate => {
@@ -35,7 +37,9 @@ const runAndSave = (getState, describe) => (parentCateId, categories) => {
 
         let allSaved = true
         const wait = commandWithCateIds.reduce(async (carry, objX) => {
-          allSaved = Boolean(allSaved && (await carry))
+          const successSaved = Boolean(await carry)
+          countFail = countFail + (successSaved ? 0 : 1)
+          allSaved = allSaved && successSaved
           return saveToMongodb(objX, mongoComUrl)
         }, describe({ type: "LOG", msg: `Saving ${commandWithCateIds.length} commands` }))
 
@@ -47,6 +51,8 @@ const runAndSave = (getState, describe) => (parentCateId, categories) => {
       })
     )
   }, describe({ type: "LOG", msg: `\x1b[36mTotal queue 'Open page': ${chunks.length}\x1b[0m` }))
+
+  return wait.then(() => countFail)
 }
 
 const successSaved = cates => {
@@ -101,8 +107,8 @@ const run = (getState, dispatch) => async () => {
   // Support test runner
   const categories = await _crawlingCategories(url)
   const slice = getState().categoriesSlice || categories.length
-  await runAndSave(getState, dispatch)(null, categories.slice(0, slice))
-  return successSaved(categories.slice(0, slice))
+  return await runAndSave(getState, dispatch)(null, categories.slice(0, slice))
+  // return successSaved(categories.slice(0, slice))
 }
 
 export default run
