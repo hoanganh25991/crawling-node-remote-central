@@ -8,7 +8,7 @@ import sendNotification from "../utils/sendNotification"
 //////
 ;(async () => {
   const store = createStore(combineReducers({ logState: logReducers }))
-  // const _index = index(() => ({categoriesSlice: 4}), store.dispatch)
+  // const _index = index(() => ({categoriesSlice: 2}), store.dispatch)
   const _index = index(() => ({}), store.dispatch)
   const t = TrackTime()
   t.start()

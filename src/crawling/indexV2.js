@@ -25,6 +25,7 @@ const runAndSave = (getState, describe) => (parentCateId, categories) => {
         // Save cate
         cate.category_id = parentCateId
         const savedCate = await saveToMongodb(cate, mongoCateUrl)
+        if (!savedCate) return
         const hasSub = cate.sub && cate.sub.length > 0
 
         if (hasSub) return await runAndSave(getState, describe)(savedCate._id, cate.sub)
@@ -32,14 +33,15 @@ const runAndSave = (getState, describe) => (parentCateId, categories) => {
         const commands = await _findCommands(cate.url.trim())
         const commandWithCateIds = commands.map(command => ({ ...command, category_id: savedCate._id }))
 
+        let allSaved = true
         const wait = commandWithCateIds.reduce(async (carry, objX) => {
-          await carry
+          allSaved = Boolean(allSaved && (await carry))
           return saveToMongodb(objX, mongoComUrl)
         }, describe({ type: "LOG", msg: `Saving ${commandWithCateIds.length} commands` }))
 
         wait.then(() => {
-          _("Set cate to successSaved")
-          cate.successSaved = true
+          // describe({type: "LOG", msg: `[${cate.title}] ${allSaved} saved`})
+          cate.successSaved = allSaved
         })
         return await wait
       })
@@ -67,25 +69,25 @@ const successSaved = cates => {
   return saved
 }
 
-const retry = 10
-const redo = (getState, dispatch) => async cates => {
-  let hasFail = false
-  let count = 0
-  do {
-    try {
-      hasFail = !successSaved(cates)
-      _("hasFail", hasFail)
-      await runAndSave(getState, dispatch)(null, cates)
-    } catch (err) {
-      _(err)
-    } finally {
-      count++
-    }
-  } while (hasFail && count < retry)
-
-  _(hasFail ? "Still has fail" : "Ok fine")
-  return !hasFail
-}
+// const retry = 10
+// const redo = (getState, dispatch) => async cates => {
+//   let hasFail = false
+//   let count = 0
+//   do {
+//     try {
+//       hasFail = !successSaved(cates)
+//       _("hasFail", hasFail)
+//       await runAndSave(getState, dispatch)(null, cates)
+//     } catch (err) {
+//       _(err)
+//     } finally {
+//       count++
+//     }
+//   } while (hasFail && count < retry)
+//
+//   _(hasFail ? "Still has fail" : "Ok fine")
+//   return !hasFail
+// }
 
 /**
  * Compile crawling categories & commands
@@ -99,7 +101,8 @@ const run = (getState, dispatch) => async () => {
   // Support test runner
   const categories = await _crawlingCategories(url)
   const slice = getState().categoriesSlice || categories.length
-  return await redo(getState, dispatch)(categories.slice(0, slice))
+  await runAndSave(getState, dispatch)(null, categories.slice(0, slice))
+  return successSaved(categories.slice(0, slice))
 }
 
 export default run
