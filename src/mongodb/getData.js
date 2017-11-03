@@ -1,5 +1,7 @@
 const request = require("request")
 
+const convertToObj = str => JSON.parse(str)
+
 export const getData = url => {
   const options = {
     method: "GET",
@@ -10,7 +12,7 @@ export const getData = url => {
   return new Promise(resolve =>
     request(options, function(error, response, body) {
       if (error) throw new Error(error)
-      resolve(body)
+      resolve(convertToObj(body))
     })
   )
 }
@@ -25,7 +27,7 @@ export const deleteData = url => {
   return new Promise(resolve =>
     request(options, function(error, response, body) {
       if (error) throw new Error(error)
-      resolve(body)
+      resolve(convertToObj(body))
     })
   )
 }

@@ -10,11 +10,14 @@ import getData, { deleteData } from "./getData"
     const title = `${new Date().getTime()}`
     const objX = { title }
     const savedObjX = await save(objX, url)
+    _(`Saved obj:`, savedObjX)
 
     const data = await getData(`${url}/${savedObjX._id}`)
+    _(`See obj:`, data)
+
     await deleteData(`${url}/${savedObjX._id}`)
 
-    const pass = Boolean(data)
+    const pass = savedObjX.title === data.title
     return pass ? _(`\x1b[42m[PASS]\x1b[0m ${TEST_CASE}`) : _(`\x1b[41m[FAIL]\x1b[0m ${TEST_CASE}`)
   } catch (err) {
     _(err)
