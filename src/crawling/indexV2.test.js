@@ -3,11 +3,13 @@ import { combineReducers, createStore } from "redux"
 import { logReducers, LogToConsole } from "../reducers/logReducers"
 import TinyPage from "../utils/page/TinyPage"
 import TrackTime from "../utils/trackTime"
+import sendNotification from "../utils/sendNotification"
 
 //////
 ;(async () => {
   const store = createStore(combineReducers({ logState: logReducers }))
-  const _index = index(() => ({ categoriesSlice: 4 }), store.dispatch)
+  // const _index = index(() => ({categoriesSlice: 4}), store.dispatch)
+  const _index = index(() => ({}), store.dispatch)
   const t = TrackTime()
   t.start()
 
@@ -15,17 +17,18 @@ import TrackTime from "../utils/trackTime"
 
   const TEST_CASE = "Crawling V2"
   const _ = console.log
+  let pass = true
 
   try {
-    await _index()
-    const pass = true
-    // _(`[RECHECK PASS] First command: ${JSON.stringify(commands[0], null, 2)}`)
-    return pass ? _(`\x1b[42m[PASS]\x1b[0m ${TEST_CASE}`) : _(`\x1b[41m[FAIL]\x1b[0m ${TEST_CASE}`)
+    pass = await _index()
   } catch (err) {
     _(err)
-    return _(`\x1b[41m[FAIL]\x1b[0m ${TEST_CASE}`)
+    pass = false
   } finally {
+    const msg = pass ? `\x1b[42m[PASS]\x1b[0m ${TEST_CASE}` : `\x1b[41m[FAIL]\x1b[0m ${TEST_CASE}`
     await TinyPage.closeBrowser()
+    await sendNotification(msg)
     t.end()
+    _(msg)
   }
 })()

@@ -10,7 +10,7 @@ const runAndSave = (getState, describe) => (parentCateId, categories) => {
   const mongoComUrl = "http://vagrant2.dev:3001/api/remotecommands"
   const _findCommands = findCommands(getState, describe)
 
-  describe({ type: "LOG", msg: `Open ${5} pages at same time to crawl` })
+  describe({ type: "LOG", msg: `Open ${2} pages at same time to crawl` })
 
   const chunks = chunk(categories, 2)
 
@@ -18,6 +18,10 @@ const runAndSave = (getState, describe) => (parentCateId, categories) => {
     await carry
     return Promise.all(
       categories.map(async cate => {
+        if (cate.successSaved) {
+          describe({ type: "LOG", msg: `[${cate.title}] already saved` })
+          return
+        }
         // Save cate
         cate.category_id = parentCateId
         const savedCate = await saveToMongodb(cate, mongoCateUrl)
@@ -25,24 +29,62 @@ const runAndSave = (getState, describe) => (parentCateId, categories) => {
 
         if (hasSub) return await runAndSave(getState, describe)(savedCate._id, cate.sub)
 
-        // Find and save commands
-        const commands = await _findCommands(cate.url)
+        const commands = await _findCommands(cate.url.trim())
         const commandWithCateIds = commands.map(command => ({ ...command, category_id: savedCate._id }))
-        return await commandWithCateIds.reduce(async (carry, objX, index) => {
-          try {
-            await carry
-          } catch (err) {
-            const pending = 20
-            console.log(`Retry save, pending... ${pending}s`)
-            await new Promise(resolve => setTimeout(resolve, pending * 1000))
-            const lastObjX = commandWithCateIds[index - 1]
-            await saveToMongodb(lastObjX, mongoComUrl)
-          }
+
+        const wait = commandWithCateIds.reduce(async (carry, objX) => {
+          await carry
           return saveToMongodb(objX, mongoComUrl)
         }, describe({ type: "LOG", msg: `Saving ${commandWithCateIds.length} commands` }))
+
+        wait.then(() => {
+          _("Set cate to successSaved")
+          cate.successSaved = true
+        })
+        return await wait
       })
     )
   }, describe({ type: "LOG", msg: `\x1b[36mTotal queue 'Open page': ${chunks.length}\x1b[0m` }))
+}
+
+const successSaved = cates => {
+  let saved = true
+
+  const run = cates => {
+    const shouldBreak = !cates || cates.length === 0
+
+    if (shouldBreak) {
+      return
+    }
+
+    cates.map(cate => {
+      saved = saved && cate.successSaved
+      run(cate.sub)
+    })
+  }
+
+  run(cates)
+  return saved
+}
+
+const retry = 10
+const redo = (getState, dispatch) => async cates => {
+  let hasFail = false
+  let count = 0
+  do {
+    try {
+      hasFail = !successSaved(cates)
+      _("hasFail", hasFail)
+      await runAndSave(getState, dispatch)(null, cates)
+    } catch (err) {
+      _(err)
+    } finally {
+      count++
+    }
+  } while (hasFail && count < retry)
+
+  _(hasFail ? "Still has fail" : "Ok fine")
+  return !hasFail
 }
 
 /**
@@ -52,16 +94,12 @@ const runAndSave = (getState, describe) => (parentCateId, categories) => {
  */
 const run = (getState, dispatch) => async () => {
   const _crawlingCategories = crawlingCategories(getState, dispatch)
-
   const url = "http://files.remotecentral.com/library/3-1/index.html"
-  const categories = await _crawlingCategories(url)
 
   // Support test runner
+  const categories = await _crawlingCategories(url)
   const slice = getState().categoriesSlice || categories.length
-
-  await runAndSave(getState, dispatch)(null, categories.slice(0, slice))
-
-  return "Done"
+  return await redo(getState, dispatch)(categories.slice(0, slice))
 }
 
 export default run
