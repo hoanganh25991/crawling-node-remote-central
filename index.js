@@ -9,7 +9,6 @@ import axios from "axios"
 
 //////
 import saveToMongodb from "./src/mongodb/saveToMongodb"
-
 ;(async () => {
   const store = createStore(combineReducers({ logState: logReducers }))
   // const mongoHost = "http://mean.originally.us:3001"
@@ -40,6 +39,8 @@ import saveToMongodb from "./src/mongodb/saveToMongodb"
       finishedAfter: t.diff(),
       timestamp: Math.floor(new Date().getTime() / 1000)
     }
+
+    _(crawlingInfo)
 
     // Save
     await saveToMongodb(crawlingInfo, `${mongoHost}/api/crawlinginfo/one`)
