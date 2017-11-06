@@ -2,7 +2,6 @@
   "dependencies": {
     "algoliasearch": "^3.24.5",
     "axios": "^0.17.0",
-    "babel-preset-node7": "^1.5.0",
     "chromeless": "^1.2.0",
     "crypto": "^1.0.1",
     "dotenv": "^4.0.0",
@@ -17,18 +16,18 @@
     "request": "^2.83.0",
     "rimraf": "^2.6.2",
     "single-line-log": "^1.1.2",
-    "unirest": "^0.5.1"
+    "unirest": "^0.5.1",
+    "babel-cli": "^6.26.0",
+    "babel-preset-node7": "^1.5.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
     "husky": "^0.14.3",
     "lint-staged": "^4.0.0",
-    "pipe-to-browser": "^1.0.4",
     "prettier": "^1.4.4"
   },
   "scripts": {
     "precommit": "lint-staged",
-    "start": "node index.js 2>&1 | pipe-to-browser",
+    "start": "babel-node .",
     "test": "babel-node scripts/run-test.js"
   },
   "lint-staged": {

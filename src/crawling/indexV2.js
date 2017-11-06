@@ -6,14 +6,21 @@ import chunk from "lodash.chunk"
 const _ = console.log
 
 const runAndSave = (getState, describe) => (parentCateId, categories) => {
-  const mongoCateUrl = "http://vagrant2.dev:3001/api/remotecategories"
-  const mongoComUrl = "http://vagrant2.dev:3001/api/remotecommands"
+  const { mongoHost = "http://vagrant2.dev:3001" } = getState()
+  const msg = mongoHost
+    ? `\x1b[42m[PASS]\x1b[0m See mongoHost: ${mongoHost}`
+    : `\x1b[41m[INFO]\x1b[0m No mongoHost setup, fallback to default: ${mongoHost}`
+
+  describe({ type: "LOG", msg })
+
+  const mongoCateUrl = `${mongoHost}/api/remotecategories`
+  const mongoComUrl = `${mongoHost}/api/remotecommands`
+
   const _findCommands = findCommands(getState, describe)
 
   describe({ type: "LOG", msg: `Open ${2} pages at same time to crawl` })
 
   const chunks = chunk(categories, 2)
-
   let countFail = 0
 
   const wait = chunks.reduce(async (carry, categories) => {
