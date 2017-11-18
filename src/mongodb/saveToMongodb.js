@@ -1,7 +1,7 @@
 import axios from "axios"
 const _ = console.log
 axios.defaults.headers = { Connection: "keep-alive" }
-axios.defaults.timeout = 1000
+axios.defaults.timeout = 2000
 
 export const saveToMongodb = async (objX, url) => {
   try {
