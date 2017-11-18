@@ -28,7 +28,8 @@
   "scripts": {
     "precommit": "lint-staged",
     "start": "babel-node .",
-    "test": "babel-node scripts/run-test.js"
+    "test": "babel-node scripts/run-test.js",
+    "monitor": "babel-node src/reducers/firebaseLogReact.test.js"
   },
   "lint-staged": {
     "*.js": [
