@@ -11,10 +11,10 @@ import axios from "axios"
 import saveToMongodb from "./src/mongodb/saveToMongodb"
 ;(async () => {
   const store = createStore(combineReducers({ logState: logReducers }))
-  // const mongoHost = "http://mean.originally.us:3001"
-  // const _index = index(() => ({mongoHost}), store.dispatch)
-  const mongoHost = "http://vagrant2.dev:3001"
-  const _index = index(() => ({ mongoHost, categoriesSlice: 2 }), store.dispatch)
+  const mongoHost = "http://mean.originally.us:3001"
+  const _index = index(() => ({ mongoHost }), store.dispatch)
+  // const mongoHost = "http://vagrant2.dev:3001"
+  // const _index = index(() => ({ mongoHost, categoriesSlice: 2 }), store.dispatch)
   const t = TrackTime()
   t.start()
 
