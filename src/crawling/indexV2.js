@@ -19,7 +19,6 @@ const runAndSave = (getState, describe) => (parentCateId, categories) => {
   describe({ type: "LOG", msg: `Open ${2} pages at same time to crawl` })
 
   const chunks = chunk(categories, 2)
-  let countFail = 0
 
   const wait = chunks.reduce(async (carry, categories) => {
     await carry
@@ -32,32 +31,29 @@ const runAndSave = (getState, describe) => (parentCateId, categories) => {
         // Save cate
         cate.category_id = parentCateId
         const savedCate = await saveToMongodb(cate, mongoCateUrl)
-        if (!savedCate) return
-        const hasSub = cate.sub && cate.sub.length > 0
 
+        if (!savedCate) {
+          describe({ type: "LOG", msg: `\x1b[41m[WARN]\x1b[0m Ignore save commands of ${cate.title}` })
+          return
+        }
+
+        const hasSub = cate.sub && cate.sub.length > 0
         if (hasSub) return await runAndSave(getState, describe)(savedCate._id, cate.sub)
 
         const commands = await _findCommands(cate.url.trim())
         const commandWithCateIds = commands.map(command => ({ ...command, category_id: savedCate._id }))
 
-        let allSaved = true
         const wait = commandWithCateIds.reduce(async (carry, objX) => {
-          const successSaved = Boolean(await carry)
-          countFail = countFail + (successSaved ? 0 : 1)
-          allSaved = allSaved && successSaved
+          await carry
           return saveToMongodb(objX, mongoComUrl)
         }, describe({ type: "LOG", msg: `Saving ${commandWithCateIds.length} commands` }))
 
-        wait.then(() => {
-          // describe({type: "LOG", msg: `[${cate.title}] ${allSaved} saved`})
-          cate.successSaved = allSaved
-        })
         return await wait
       })
     )
   }, describe({ type: "LOG", msg: `\x1b[36mTotal queue 'Open page': ${chunks.length}\x1b[0m` }))
 
-  return wait.then(() => countFail)
+  return wait
 }
 
 /**
