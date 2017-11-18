@@ -1,4 +1,5 @@
 import index from "../crawling/index"
+// import index from "../crawling/indexV2"
 import { combineReducers, createStore } from "redux"
 import { logReducers, LogToConsole } from "../reducers/logReducers"
 import TinyPage from "../utils/page/TinyPage"
